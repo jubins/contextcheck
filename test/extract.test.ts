@@ -158,6 +158,11 @@ const cases: Case[] = [
     paths: [],
   },
   {
+    name: "prose trap: bare filename mention not a path",
+    md: "Supports AGENTS.md and CLAUDE.md style files.",
+    paths: [],
+  },
+  {
     name: "prose path detected at low confidence",
     md: "Handlers live in src/handlers/index.ts today.",
     paths: ["src/handlers/index.ts"],

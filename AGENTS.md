@@ -1,7 +1,8 @@
 # Context Check
 
-A linter that verifies AI agent context files (AGENTS.md, CLAUDE.md, and friends)
-against the actual repository. Deterministic checks first, LLM assistance last.
+A linter that verifies AI agent context files against the actual repository.
+Supports AGENTS.md and CLAUDE.md style files. Deterministic checks first,
+LLM assistance last.
 
 We dogfood: this file is checked by the tool it documents.
 

@@ -1,10 +1,14 @@
 {
-  "name": "contextcheck",
+  "name": "ctxcheck",
   "version": "0.1.0",
   "description": "Lint AI agent context files (AGENTS.md, CLAUDE.md) against the actual repository.",
   "type": "module",
   "license": "MIT",
   "author": "Jubin Soni",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jubins/contextcheck.git"
+  },
   "keywords": [
     "AGENTS.md",
     "CLAUDE.md",
@@ -26,17 +30,23 @@
       "import": "./dist/index.js"
     }
   },
+  "bin": {
+    "ctxcheck": "./dist/cli.js",
+    "contextcheck": "./dist/cli.js"
+  },
   "files": [
     "dist"
   ],
   "scripts": {
     "build": "tsup",
+    "check": "node ./dist/cli.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "commander": "^12.1.0",
     "mdast-util-from-markdown": "^2.0.2",
     "picocolors": "^1.1.1"
   },
