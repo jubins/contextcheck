@@ -1,0 +1,70 @@
+{
+  "name": "contextcheck",
+  "displayName": "Context Check",
+  "description": "Lint AI agent context files (AGENTS.md, CLAUDE.md) against your actual repository. Deterministic, offline, no API keys.",
+  "version": "0.1.0",
+  "publisher": "jubinsoni",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jubins/contextcheck.git",
+    "directory": "vscode"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Linters"
+  ],
+  "keywords": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "agent",
+    "context",
+    "lint",
+    "Claude Code",
+    "Copilot",
+    "Cursor"
+  ],
+  "icon": "icon.png",
+  "activationEvents": [
+    "onLanguage:markdown",
+    "workspaceContains:**/AGENTS.md",
+    "workspaceContains:**/CLAUDE.md"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "contextcheck.checkWorkspace",
+        "title": "Context Check: Check workspace"
+      }
+    ],
+    "configuration": {
+      "title": "Context Check",
+      "properties": {
+        "contextcheck.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable Context Check diagnostics."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "watch": "tsup --watch",
+    "vscode:prepublish": "tsup",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "dependencies": {
+    "ctxcheck": "file:.."
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/vscode": "^1.85.0",
+    "tsup": "^8.3.5",
+    "typescript": "^5.6.3"
+  }
+}
