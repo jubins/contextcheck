@@ -5,7 +5,7 @@ import {
   findRepoRoot,
   CONTEXT_FILENAMES,
   type Finding,
-} from "ctxcheck";
+} from "contextcheck-cli";
 import { buildFix, fixTitle } from "./fixes.js";
 import {
   FindingsTreeProvider,
