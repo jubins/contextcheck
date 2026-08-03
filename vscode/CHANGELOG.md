@@ -4,11 +4,30 @@ All notable changes to the Context Check extension are documented here.
 
 ## [0.1.1] - 2026-08-03
 
+### Added
+
 - **Activity Bar sidebar** — a dedicated Context Check view listing findings
   grouped by file, with a "Re-check" title button, click-to-jump, and an inline
-  wrench to apply a finding's fix without opening the file.
+  wrench to apply a finding's fix without opening the file. Shows a badge with
+  the total issue count and a welcome view when everything is clean.
+- **Case-mismatch quick fix** — `case-mismatch-path` findings are now fixable
+  from the lightbulb and the sidebar, correcting a path to its on-disk casing
+  (e.g. `src/Services/types.ts` → `src/services/types.ts`).
+
+### Fixed
+
 - Fixed broken README images on the Marketplace by using absolute image URLs
   (the Marketplace does not serve relative image paths).
+- The path resolver now walks every segment and reports the full corrected
+  path, fixing a case where a genuinely-missing deeper path was misreported as
+  a case mismatch.
+
+### Docs
+
+- Rewrote the README as a polished Marketplace listing with real GIFs and
+  screenshots, a before/after comparison, and a positive tagline.
+- Added live Marketplace badges (version, installs, rating).
+- Added `CONTRIBUTING.md` and `CODE_OF_CONDUCT.md`.
 
 ## [0.1.0] - 2026-08-02
 

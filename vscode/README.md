@@ -142,6 +142,8 @@ your repository's manifests (`package.json`, etc.) to verify claims. It makes
 
 Issues and pull requests are welcome at
 [github.com/jubins/contextcheck](https://github.com/jubins/contextcheck/issues).
+See [CONTRIBUTING.md](https://github.com/jubins/contextcheck/blob/master/CONTRIBUTING.md)
+and the [Code of Conduct](https://github.com/jubins/contextcheck/blob/master/CODE_OF_CONDUCT.md).
 
 ---
 

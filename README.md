@@ -51,6 +51,11 @@ then press **F5** in VS Code to launch it against `vscode/demo-workspace/`.
 - Every check is deterministic and explainable.
 - If a claim can't be verified with certainty, warn — never a false error.
 
+## Contributing
+
+Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) and
+the [Code of Conduct](CODE_OF_CONDUCT.md).
+
 ## License
 
 [MIT](LICENSE) © Jubin Soni
