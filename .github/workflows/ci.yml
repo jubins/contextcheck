@@ -35,6 +35,10 @@ jobs:
         working-directory: vscode
         run: npm install
 
+      - name: Test extension
+        working-directory: vscode
+        run: npm test
+
       - name: Build extension
         working-directory: vscode
         run: npm run build

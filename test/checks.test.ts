@@ -108,6 +108,17 @@ describe("case-mismatch-path", () => {
     expect(cm!.severity).toBe("error");
     expect(cm!.suggestion).toContain("services");
   });
+
+  it("is fixable and suggests the full corrected path", async () => {
+    const res = await lintSource(
+      "See `src/Services/auth.ts`.",
+      fx("paths-repo"),
+      "AGENTS.md",
+    );
+    const cm = res.findings.find((x) => x.rule === "case-mismatch-path");
+    expect(cm!.fixable).toBe(true);
+    expect(cm!.suggestion).toContain("`src/services/auth.ts`");
+  });
 });
 
 describe("rule config", () => {

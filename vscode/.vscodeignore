@@ -1,9 +1,11 @@
 src/**
+test/**
 node_modules/**
 demo-workspace/**
 .vscode/**
 tsconfig.json
 tsup.config.ts
+vitest.config.ts
 **/*.map
 **/*.ts
 .gitignore

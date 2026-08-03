@@ -27,11 +27,21 @@ export function replaceLastTaskToken(
   return `${m[1]}${suggested}${m[3]}${tail}`;
 }
 
+/** First backtick-wrapped token in a string, e.g. the path in a message. */
+function firstBacktickToken(text: string): string | undefined {
+  const m = text.match(/`([^`]+)`/);
+  return m ? m[1] : undefined;
+}
+
 /** A human label for the fix a finding supports, or undefined if none. */
 export function fixTitle(finding: Finding): string | undefined {
   if (finding.rule === "stale-command" && finding.fixable) {
     const s = extractSuggestedToken(finding.suggestion);
     return s ? `Replace with \`${s}\`` : undefined;
+  }
+  if (finding.rule === "case-mismatch-path" && finding.fixable) {
+    const corrected = extractSuggestedToken(finding.suggestion);
+    return corrected ? `Fix casing to \`${corrected}\`` : undefined;
   }
   if (finding.rule === "dead-path") {
     return "Remove line referencing missing path";
@@ -59,6 +69,23 @@ export function buildFix(
     const replaced = replaceLastTaskToken(lineText, suggested);
     if (replaced === undefined) return undefined;
     edit.replace(doc.uri, doc.lineAt(lineIdx).range, replaced);
+    return edit;
+  }
+
+  if (finding.rule === "case-mismatch-path" && finding.fixable) {
+    // The message holds the original (wrong-cased) path; the suggestion holds
+    // the corrected path. Swap the first occurrence of the original on the line.
+    const original = firstBacktickToken(finding.message);
+    const corrected = extractSuggestedToken(finding.suggestion);
+    if (!original || !corrected) return undefined;
+    const lineText = doc.lineAt(lineIdx).text;
+    const at = lineText.indexOf(original);
+    if (at < 0) return undefined;
+    const range = new vscode.Range(
+      new vscode.Position(lineIdx, at),
+      new vscode.Position(lineIdx, at + original.length),
+    );
+    edit.replace(doc.uri, range, corrected);
     return edit;
   }
 
