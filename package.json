@@ -35,7 +35,8 @@
     "contextcheck": "./dist/cli.js"
   },
   "files": [
-    "dist"
+    "dist/**/*.js",
+    "dist/**/*.d.ts"
   ],
   "scripts": {
     "build": "tsup",
