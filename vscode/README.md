@@ -6,16 +6,11 @@
 
 **Keep your AGENTS.md honest — automatically.**
 
-[![CI](https://github.com/jubins/contextcheck/actions/workflows/ci.yml/badge.svg)](https://github.com/jubins/contextcheck/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-
-<!--
-After publishing, add live Marketplace badges (shields.io's VS Marketplace
-endpoints are retired). Use vsmarketplacebadges.dev, e.g.:
 [![Version](https://vsmarketplacebadges.dev/version-short/jubinsoni.contextcheck.png)](https://marketplace.visualstudio.com/items?itemName=jubinsoni.contextcheck)
 [![Installs](https://vsmarketplacebadges.dev/installs-short/jubinsoni.contextcheck.png)](https://marketplace.visualstudio.com/items?itemName=jubinsoni.contextcheck)
 [![Rating](https://vsmarketplacebadges.dev/rating-star/jubinsoni.contextcheck.png)](https://marketplace.visualstudio.com/items?itemName=jubinsoni.contextcheck)
--->
+[![CI](https://github.com/jubins/contextcheck/actions/workflows/ci.yml/badge.svg)](https://github.com/jubins/contextcheck/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 </div>
 
