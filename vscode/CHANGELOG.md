@@ -2,11 +2,13 @@
 
 All notable changes to the Context Check extension are documented here.
 
-## [Unreleased]
+## [0.1.1] - 2026-08-03
 
 - **Activity Bar sidebar** — a dedicated Context Check view listing findings
   grouped by file, with a "Re-check" title button, click-to-jump, and an inline
   wrench to apply a finding's fix without opening the file.
+- Fixed broken README images on the Marketplace by using absolute image URLs
+  (the Marketplace does not serve relative image paths).
 
 ## [0.1.0] - 2026-08-02
 

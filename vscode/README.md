@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="icon.png" alt="Context Check" width="96" height="96" />
+<img src="https://raw.githubusercontent.com/jubins/contextcheck/master/vscode/icon.png" alt="Context Check" width="96" height="96" />
 
 # Context Check
 
@@ -26,7 +26,7 @@ gone stale, right inside VS Code.
 > Free and open source. No account, no API key, no telemetry — every check runs
 > locally and is deterministic.
 
-![Context Check demo](media/demo.gif)
+![Context Check demo](https://raw.githubusercontent.com/jubins/contextcheck/master/vscode/media/demo.gif)
 
 ---
 
@@ -38,7 +38,7 @@ your agent confidently runs commands that no longer exist.
 
 | Without Context Check | With Context Check |
 |---|---|
-| ![Stale AGENTS.md, no warnings](media/before.png) | ![The same file with findings surfaced](media/after.png) |
+| ![Stale AGENTS.md, no warnings](https://raw.githubusercontent.com/jubins/contextcheck/master/vscode/media/before.png) | ![The same file with findings surfaced](https://raw.githubusercontent.com/jubins/contextcheck/master/vscode/media/after.png) |
 
 ---
 
@@ -68,14 +68,14 @@ Search **"Context Check"** in the VS Code Extensions panel, or install from the
 Open a repo that has an `AGENTS.md` or `CLAUDE.md`. Findings appear immediately in
 the editor and the **Problems** panel, and refresh every time you save.
 
-![Inline error with the fix lightbulb](media/inline-lightbulb.png)
+![Inline error with the fix lightbulb](https://raw.githubusercontent.com/jubins/contextcheck/master/vscode/media/inline-lightbulb.png)
 
 ### 3. Fix issues
 
 Click the lightbulb (⌘.) on a finding to apply its fix — replace a stale command
 with the real script, or correct a path's casing.
 
-![Applying a quick fix](media/quickfix.gif)
+![Applying a quick fix](https://raw.githubusercontent.com/jubins/contextcheck/master/vscode/media/quickfix.gif)
 
 ---
 
@@ -87,7 +87,7 @@ total count.
 
 | Findings grouped by file | Apply a fix inline |
 |---|---|
-| ![Sidebar with issue count badge](media/sidebar-badge.png) | ![Inline apply-fix wrench on each issue](media/sidebar-applyfix.png) |
+| ![Sidebar with issue count badge](https://raw.githubusercontent.com/jubins/contextcheck/master/vscode/media/sidebar-badge.png) | ![Inline apply-fix wrench on each issue](https://raw.githubusercontent.com/jubins/contextcheck/master/vscode/media/sidebar-applyfix.png) |
 
 - **Re-check** (the refresh button in the view's title bar) re-scans the whole workspace.
 - **Click a finding** to jump straight to it in the editor.
@@ -95,7 +95,7 @@ total count.
 
 Once everything is fixed, the view is clean:
 
-![Clean state after applying all fixes](media/clean-recheck.png)
+![Clean state after applying all fixes](https://raw.githubusercontent.com/jubins/contextcheck/master/vscode/media/clean-recheck.png)
 
 ---
 
