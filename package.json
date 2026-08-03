@@ -31,8 +31,8 @@
     }
   },
   "bin": {
-    "ctxcheck": "./dist/cli.js",
-    "contextcheck": "./dist/cli.js"
+    "ctxcheck": "dist/cli.js",
+    "contextcheck": "dist/cli.js"
   },
   "files": [
     "dist/**/*.js",
