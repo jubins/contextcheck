@@ -1,7 +1,11 @@
 src/**
 node_modules/**
+demo-workspace/**
+media/RECORDING.md
+.vscode/**
 tsconfig.json
 tsup.config.ts
 **/*.map
 **/*.ts
 .gitignore
+.vscodeignore
