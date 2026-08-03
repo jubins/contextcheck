@@ -1,7 +1,7 @@
 {
   "name": "contextcheck",
   "displayName": "Context Check",
-  "description": "Lint AI agent context files (AGENTS.md, CLAUDE.md) against your actual repository. Deterministic, offline, no API keys.",
+  "description": "Keep your AGENTS.md honest — automatically. Lint AI agent context files (AGENTS.md, CLAUDE.md) against your actual repository. Deterministic, offline, no API keys.",
   "version": "0.1.0",
   "publisher": "jubinsoni",
   "license": "MIT",
@@ -34,12 +34,86 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "contextcheck",
+          "title": "Context Check",
+          "icon": "media/activity-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "contextcheck": [
+        {
+          "id": "contextcheck.findings",
+          "name": "Findings",
+          "icon": "media/activity-icon.svg",
+          "contextualTitle": "Context Check"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "contextcheck.findings",
+        "contents": "No issues found in your context files.\n[Check workspace](command:contextcheck.checkWorkspace)\n\nContext Check verifies the commands and paths in your AGENTS.md / CLAUDE.md against the real repository."
+      }
+    ],
     "commands": [
       {
         "command": "contextcheck.checkWorkspace",
-        "title": "Context Check: Check workspace"
+        "title": "Check workspace",
+        "category": "Context Check",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "contextcheck.refresh",
+        "title": "Re-check",
+        "category": "Context Check",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "contextcheck.applyFix",
+        "title": "Apply fix",
+        "category": "Context Check",
+        "icon": "$(wrench)"
+      },
+      {
+        "command": "contextcheck.goToFinding",
+        "title": "Go to finding",
+        "category": "Context Check"
       }
     ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "contextcheck.refresh",
+          "when": "view == contextcheck.findings",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "contextcheck.applyFix",
+          "when": "view == contextcheck.findings && viewItem == contextcheck.finding.fixable",
+          "group": "inline"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "contextcheck.refresh",
+          "when": "false"
+        },
+        {
+          "command": "contextcheck.applyFix",
+          "when": "false"
+        },
+        {
+          "command": "contextcheck.goToFinding",
+          "when": "false"
+        }
+      ]
+    },
     "configuration": {
       "title": "Context Check",
       "properties": {
@@ -54,6 +128,7 @@
   "scripts": {
     "build": "tsup",
     "watch": "tsup --watch",
+    "test": "vitest run",
     "vscode:prepublish": "tsup",
     "package": "vsce package",
     "publish": "vsce publish"
@@ -65,6 +140,7 @@
     "@types/node": "^20.14.0",
     "@types/vscode": "^1.85.0",
     "tsup": "^8.3.5",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
   }
 }

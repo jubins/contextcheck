@@ -2,6 +2,12 @@
 
 All notable changes to the Context Check extension are documented here.
 
+## [Unreleased]
+
+- **Activity Bar sidebar** — a dedicated Context Check view listing findings
+  grouped by file, with a "Re-check" title button, click-to-jump, and an inline
+  wrench to apply a finding's fix without opening the file.
+
 ## [0.1.0] - 2026-08-02
 
 Initial release.

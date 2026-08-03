@@ -76,8 +76,12 @@ export async function checkDeadPath(
         message: `path \`${claim.value}\` exists with different casing; this breaks case-sensitive (Linux) CI`,
         line: claim.line,
         column: claim.column,
-        suggestion: res.actual ? `on disk as \`${res.actual}\`` : undefined,
-        fixable: false,
+        suggestion: res.corrected
+          ? `did you mean \`${res.corrected}\`?`
+          : res.actual
+            ? `on disk as \`${res.actual}\``
+            : undefined,
+        fixable: res.corrected !== undefined,
       });
       continue;
     }

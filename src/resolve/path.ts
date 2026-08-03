@@ -10,8 +10,13 @@ export interface PathResolution {
   status: PathStatus;
   /** True when the resolved entry is a symlink. */
   symlink: boolean;
-  /** For case-mismatch, the actual on-disk name of the differing segment. */
+  /** For case-mismatch, the actual on-disk name of the first differing segment. */
   actual?: string;
+  /**
+   * For case-mismatch, the full path rewritten to the on-disk casing
+   * (forward-slash separated, relative to repo root). Undefined otherwise.
+   */
+  corrected?: string;
 }
 
 /**
@@ -37,6 +42,10 @@ export class PathResolver {
     const segments = normalize(rel).split(sep).filter((s) => s.length > 0);
     let current = this.repoRoot;
     let symlink = false;
+    // On-disk casing of each segment, so we can rebuild the corrected path.
+    const correctedSegments: string[] = [];
+    // First segment whose casing differed from the claim (for `actual`).
+    let firstMismatch: string | undefined;
 
     for (const segment of segments) {
       let entries: string[];
@@ -47,15 +56,21 @@ export class PathResolver {
       }
 
       if (entries.includes(segment)) {
+        correctedSegments.push(segment);
         current = join(current, segment);
       } else {
         const ciMatch = entries.find(
           (e) => e.toLowerCase() === segment.toLowerCase(),
         );
         if (ciMatch) {
-          return { status: "case-mismatch", symlink, actual: ciMatch };
+          // Case-only mismatch: record the on-disk name and keep walking so
+          // the full corrected path covers every segment.
+          if (firstMismatch === undefined) firstMismatch = ciMatch;
+          correctedSegments.push(ciMatch);
+          current = join(current, ciMatch);
+        } else {
+          return { status: "missing", symlink };
         }
-        return { status: "missing", symlink };
       }
 
       // Track whether any segment along the way is a symlink.
@@ -71,6 +86,14 @@ export class PathResolver {
       }
     }
 
+    if (firstMismatch !== undefined) {
+      return {
+        status: "case-mismatch",
+        symlink,
+        actual: firstMismatch,
+        corrected: correctedSegments.join("/"),
+      };
+    }
     return { status: "exists", symlink };
   }
 }

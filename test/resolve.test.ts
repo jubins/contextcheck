@@ -75,6 +75,7 @@ describe("PathResolver", () => {
     const r = await resolver.resolve("src/Services/auth.ts");
     expect(r.status).toBe("case-mismatch");
     expect(r.actual).toBe("services");
+    expect(r.corrected).toBe("src/services/auth.ts");
   });
 
   it("normalizes windows-style separators", async () => {

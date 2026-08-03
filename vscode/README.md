@@ -1,93 +1,132 @@
 <div align="center">
 
-<img src="media/icon.png" alt="Context Check" width="96" height="96" />
+<img src="icon.png" alt="Context Check" width="96" height="96" />
 
 # Context Check
 
-**Your AGENTS.md is telling your agent things that aren't true.**
-
-Lint AI agent context files (`AGENTS.md`, `CLAUDE.md`, and friends) against your
-**actual repository** — right inside VS Code. Deterministic, offline, no API keys.
+**Keep your AGENTS.md honest — automatically.**
 
 [![CI](https://github.com/jubins/contextcheck/actions/workflows/ci.yml/badge.svg)](https://github.com/jubins/contextcheck/actions/workflows/ci.yml)
-[![Version](https://img.shields.io/visual-studio-marketplace/v/jubinsoni.contextcheck?label=marketplace)](https://marketplace.visualstudio.com/items?itemName=jubinsoni.contextcheck)
-[![Installs](https://img.shields.io/visual-studio-marketplace/i/jubinsoni.contextcheck)](https://marketplace.visualstudio.com/items?itemName=jubinsoni.contextcheck)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
+<!--
+After publishing, add live Marketplace badges (shields.io's VS Marketplace
+endpoints are retired). Use vsmarketplacebadges.dev, e.g.:
+[![Version](https://vsmarketplacebadges.dev/version-short/jubinsoni.contextcheck.png)](https://marketplace.visualstudio.com/items?itemName=jubinsoni.contextcheck)
+[![Installs](https://vsmarketplacebadges.dev/installs-short/jubinsoni.contextcheck.png)](https://marketplace.visualstudio.com/items?itemName=jubinsoni.contextcheck)
+[![Rating](https://vsmarketplacebadges.dev/rating-star/jubinsoni.contextcheck.png)](https://marketplace.visualstudio.com/items?itemName=jubinsoni.contextcheck)
+-->
 
 </div>
 
+Context Check lints AI agent context files (`AGENTS.md`, `CLAUDE.md`, and friends)
+against your **actual repository** — flagging commands, paths, and casing that have
+gone stale, right inside VS Code.
+
+> Free and open source. No account, no API key, no telemetry — every check runs
+> locally and is deterministic.
+
+![Context Check demo](media/demo.gif)
+
 ---
 
-Agent context files drift. You rename an npm script, move a folder, switch from
-Jest to Vitest — but the `AGENTS.md` you handed your AI still points at the old
-world. Your agent then confidently runs commands that no longer exist.
+## Why
 
-**Context Check verifies every claim in your context file against what's really
-in the repo**, and flags the ones that have gone stale — as you type, in the
-Problems panel, with one-click quick fixes.
+Agent context files drift. You rename an npm script, move a folder, or switch
+tools — but the `AGENTS.md` you handed your AI still points at the old world, so
+your agent confidently runs commands that no longer exist.
 
-Everything runs locally. **Zero network calls, no API keys, no telemetry, no sign-up.**
+| Without Context Check | With Context Check |
+|---|---|
+| ![Stale AGENTS.md, no warnings](media/before.png) | ![The same file with findings surfaced](media/after.png) |
 
-<p align="center">
-  <img src="media/demo.png" alt="Context Check flagging a stale command and a dead path in AGENTS.md" width="800" />
-</p>
+---
 
 ## Features
 
 - **Stale command detection** — a command like `npm run build` that no longer
-  exists in `package.json`. Suggests the closest real script
-  (*"did you mean `build:prod`?"*).
+  exists in `package.json`, with a *"did you mean `build:prod`?"* suggestion.
 - **Dead path detection** — a referenced file or directory that isn't there.
-- **Case-mismatch paths** — a path that resolves on macOS but breaks
-  case-sensitive Linux CI (a real, silent bug class).
-- **Quick fixes** — replace a stale command with the suggested task, or remove a
-  dead-path reference, in one click.
-- **Status bar count** — see at a glance how many issues the active context file has.
-- **Check the whole workspace** — one command lints every `AGENTS.md` / `CLAUDE.md` at once.
-- **Deterministic & explainable** — every finding maps to a rule you can read.
-  No LLM guessing.
+- **Case-mismatch detection** — a path that resolves on macOS but breaks
+  case-sensitive Linux CI, with a one-click casing fix.
+- **Quick fixes** — apply the suggested fix from the editor lightbulb or the sidebar.
+- **Dedicated sidebar** — an Activity Bar view grouping every finding by file.
+- **Status bar count** — the active file's issue count at a glance.
+- **Deterministic & explainable** — every finding maps to a rule you can read. No LLM guessing.
+
+---
 
 ## Getting Started
 
-1. **Install** Context Check from the Marketplace (or run
-   `code --install-extension jubinsoni.contextcheck`).
-2. **Open a repo** that has an `AGENTS.md` or `CLAUDE.md` at its root.
-3. **Open the context file.** Findings appear immediately in the editor and the
-   **Problems** panel, and refresh every time you save.
-4. **Fix issues** with the lightbulb (⌘.) quick fixes, or run
-   **Context Check: Check workspace** from the Command Palette to scan everything.
+### 1. Install
 
-<p align="center">
-  <img src="media/quickfix.png" alt="Applying a quick fix to replace a stale command" width="800" />
-</p>
+Search **"Context Check"** in the VS Code Extensions panel, or install from the
+[Marketplace](https://marketplace.visualstudio.com/items?itemName=jubinsoni.contextcheck).
 
-## Screenshots
+### 2. Open a context file
 
-<p align="center">
-  <img src="media/screenshot-problems.png" alt="Findings in the Problems panel" width="32%" />
-  <img src="media/screenshot-inline.png" alt="Inline diagnostics on a stale command" width="32%" />
-  <img src="media/screenshot-statusbar.png" alt="Status bar findings count" width="32%" />
-</p>
+Open a repo that has an `AGENTS.md` or `CLAUDE.md`. Findings appear immediately in
+the editor and the **Problems** panel, and refresh every time you save.
 
-## Commands
+![Inline error with the fix lightbulb](media/inline-lightbulb.png)
 
-| Command | Description |
-| --- | --- |
-| `Context Check: Check workspace` | Scan every context file in the workspace and report all findings. |
+### 3. Fix issues
+
+Click the lightbulb (⌘.) on a finding to apply its fix — replace a stale command
+with the real script, or correct a path's casing.
+
+![Applying a quick fix](media/quickfix.gif)
+
+---
+
+## The sidebar
+
+Click the **Context Check** icon in the Activity Bar to open the **Findings** view.
+It groups every issue across your workspace by file, and shows a badge with the
+total count.
+
+| Findings grouped by file | Apply a fix inline |
+|---|---|
+| ![Sidebar with issue count badge](media/sidebar-badge.png) | ![Inline apply-fix wrench on each issue](media/sidebar-applyfix.png) |
+
+- **Re-check** (the refresh button in the view's title bar) re-scans the whole workspace.
+- **Click a finding** to jump straight to it in the editor.
+- **The wrench** on a fixable finding applies its fix without opening the file.
+
+Once everything is fixed, the view is clean:
+
+![Clean state after applying all fixes](media/clean-recheck.png)
+
+---
 
 ## What it checks
 
 | Rule | Severity | Meaning |
-| --- | --- | --- |
+|---|---|---|
 | `stale-command` | Error | A command names a task the repo doesn't define. Suggests the closest match. |
 | `dead-path` | Error / Warning | A referenced path doesn't exist. Error for explicit paths, warning for prose mentions. |
 | `case-mismatch-path` | Error | A path exists but with different casing — breaks case-sensitive CI. |
 
+---
+
+## Commands
+
+All actions are available from the sidebar and the Command Palette
+(`Cmd+Shift+P` / `Ctrl+Shift+P` → type **"Context Check"**).
+
+| Command | Description |
+|---|---|
+| `Context Check: Check workspace` | Scan every context file in the workspace and report all findings. |
+
+---
+
 ## Settings
 
 | Setting | Default | Description |
-| --- | --- | --- |
+|---|---|---|
 | `contextcheck.enable` | `true` | Enable or disable Context Check diagnostics. |
+
+---
 
 ## Privacy
 
@@ -95,20 +134,21 @@ Context Check runs **entirely on your machine**. It reads your context files and
 your repository's manifests (`package.json`, etc.) to verify claims. It makes
 **no network requests**, stores no data, and sends no telemetry.
 
+---
+
 ## Requirements
 
-- VS Code `1.85.0` or newer.
+- VS Code 1.85 or later.
 - A workspace containing an `AGENTS.md` or `CLAUDE.md` file.
 
-## Explicitly out of scope
-
-No LLM calls, no API-key prompts, no sign-up. Every check is deterministic and
-explainable — false positives are treated as bugs.
+---
 
 ## Contributing
 
-Issues and pull requests welcome at
-[github.com/jubins/contextcheck](https://github.com/jubins/contextcheck).
+Issues and pull requests are welcome at
+[github.com/jubins/contextcheck](https://github.com/jubins/contextcheck/issues).
+
+---
 
 ## License
 
