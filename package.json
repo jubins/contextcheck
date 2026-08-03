@@ -31,11 +31,12 @@
     }
   },
   "bin": {
-    "ctxcheck": "./dist/cli.js",
-    "contextcheck": "./dist/cli.js"
+    "ctxcheck": "dist/cli.js",
+    "contextcheck": "dist/cli.js"
   },
   "files": [
-    "dist"
+    "dist/**/*.js",
+    "dist/**/*.d.ts"
   ],
   "scripts": {
     "build": "tsup",
