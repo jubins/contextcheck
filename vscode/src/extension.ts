@@ -6,6 +6,12 @@ import {
   CONTEXT_FILENAMES,
   type Finding,
 } from "ctxcheck";
+import { buildFix, fixTitle } from "./fixes.js";
+import {
+  FindingsTreeProvider,
+  type FindingRef,
+  type TreeItemWithRef,
+} from "./tree.js";
 
 const DIAGNOSTIC_SOURCE = "Context Check";
 
@@ -26,37 +32,34 @@ function severityToVscode(sev: Finding["severity"]): vscode.DiagnosticSeverity {
   }
 }
 
-/**
- * Convert a Finding's 1-based line/column into a VS Code range covering the
- * word at that position, so the squiggle lands on the offending token.
- */
+/** Convert a Finding's 1-based line/column into a range over the word there. */
 function findingRange(doc: vscode.TextDocument, f: Finding): vscode.Range {
-  const line = Math.max(0, f.line - 1);
+  const line = Math.max(0, Math.min(f.line - 1, doc.lineCount - 1));
   const col = Math.max(0, f.column - 1);
   const start = new vscode.Position(line, col);
   const wordRange = doc.getWordRangeAtPosition(start);
   if (wordRange) return wordRange;
-  const lineText = doc.lineAt(Math.min(line, doc.lineCount - 1));
+  const lineText = doc.lineAt(line);
   return new vscode.Range(start, lineText.range.end);
 }
 
-/** A Finding carried on a Diagnostic so code actions can read it back. */
 interface DiagnosticWithFinding extends vscode.Diagnostic {
   finding?: Finding;
 }
 
 async function lintDocument(
   doc: vscode.TextDocument,
-): Promise<vscode.Diagnostic[]> {
+): Promise<{ diagnostics: vscode.Diagnostic[]; findings: Finding[] }> {
   const config = vscode.workspace.getConfiguration("contextcheck");
-  if (config.get<boolean>("enable") === false) return [];
-  if (!isContextFile(doc)) return [];
+  if (config.get<boolean>("enable") === false || !isContextFile(doc)) {
+    return { diagnostics: [], findings: [] };
+  }
 
   const filePath = doc.uri.fsPath;
   const repoRoot = await findRepoRoot(dirname(filePath));
   const result = await lintSource(doc.getText(), repoRoot, filePath);
 
-  return result.findings.map((f) => {
+  const diagnostics = result.findings.map((f) => {
     const diag: DiagnosticWithFinding = new vscode.Diagnostic(
       findingRange(doc, f),
       f.suggestion ? `${f.message} — ${f.suggestion}` : f.message,
@@ -67,15 +70,10 @@ async function lintDocument(
     diag.finding = f;
     return diag;
   });
+  return { diagnostics, findings: result.findings };
 }
 
-/** Pull the backtick-wrapped suggestion token, e.g. "did you mean `build`?". */
-function extractSuggestedToken(suggestion: string | undefined): string | undefined {
-  if (!suggestion) return undefined;
-  const m = suggestion.match(/`([^`]+)`/);
-  return m ? m[1] : undefined;
-}
-
+/** Editor lightbulb quick fixes, delegating to the shared buildFix(). */
 class ContextCheckActions implements vscode.CodeActionProvider {
   static readonly kinds = [vscode.CodeActionKind.QuickFix];
 
@@ -87,75 +85,27 @@ class ContextCheckActions implements vscode.CodeActionProvider {
     const actions: vscode.CodeAction[] = [];
     for (const diag of context.diagnostics as DiagnosticWithFinding[]) {
       if (diag.source !== DIAGNOSTIC_SOURCE || !diag.finding) continue;
-      const f = diag.finding;
-
-      if (f.rule === "stale-command" && f.fixable) {
-        const suggested = extractSuggestedToken(f.suggestion);
-        if (suggested) {
-          const line = doc.lineAt(diag.range.start.line).text;
-          // Replace the stale task name in the command with the suggestion.
-          const fix = new vscode.CodeAction(
-            `Replace with \`${suggested}\``,
-            vscode.CodeActionKind.QuickFix,
-          );
-          fix.diagnostics = [diag];
-          fix.edit = new vscode.WorkspaceEdit();
-          const replaced = replaceLastTaskToken(line, suggested);
-          if (replaced !== undefined) {
-            fix.edit.replace(
-              doc.uri,
-              doc.lineAt(diag.range.start.line).range,
-              replaced,
-            );
-            actions.push(fix);
-          }
-        }
-      }
-
-      if (f.rule === "dead-path") {
-        // Offer to remove the line referencing a path that doesn't exist.
-        const fix = new vscode.CodeAction(
-          "Remove line referencing missing path",
-          vscode.CodeActionKind.QuickFix,
-        );
-        fix.diagnostics = [diag];
-        fix.edit = new vscode.WorkspaceEdit();
-        const lineIdx = diag.range.start.line;
-        fix.edit.delete(
-          doc.uri,
-          new vscode.Range(
-            new vscode.Position(lineIdx, 0),
-            new vscode.Position(
-              Math.min(lineIdx + 1, doc.lineCount - 1),
-              lineIdx + 1 < doc.lineCount ? 0 : doc.lineAt(lineIdx).range.end.character,
-            ),
-          ),
-        );
-        actions.push(fix);
-      }
+      const title = fixTitle(diag.finding);
+      const edit = buildFix(doc, diag.finding);
+      if (!title || !edit) continue;
+      const fix = new vscode.CodeAction(title, vscode.CodeActionKind.QuickFix);
+      fix.diagnostics = [diag];
+      fix.edit = edit;
+      actions.push(fix);
     }
     return actions;
   }
 }
 
-/**
- * Replace the last run-token on a command line with `suggested`. Handles
- * `npm run OLD` -> `npm run NEW` and `make OLD` -> `make NEW` by swapping the
- * final whitespace-delimited token that precedes any trailing comment.
- */
-function replaceLastTaskToken(line: string, suggested: string): string | undefined {
-  // Split off a trailing inline comment so we don't clobber it.
-  const commentIdx = line.search(/\s#/);
-  const head = commentIdx >= 0 ? line.slice(0, commentIdx) : line;
-  const tail = commentIdx >= 0 ? line.slice(commentIdx) : "";
-  const m = head.match(/^(.*\S\s+)(\S+)(\s*)$/);
-  if (!m) return undefined;
-  return `${m[1]}${suggested}${m[3]}${tail}`;
-}
-
 export function activate(context: vscode.ExtensionContext): void {
-  const diagnostics = vscode.languages.createDiagnosticCollection("contextcheck");
-  context.subscriptions.push(diagnostics);
+  const diagnostics =
+    vscode.languages.createDiagnosticCollection("contextcheck");
+  const tree = new FindingsTreeProvider();
+  const view = vscode.window.createTreeView("contextcheck.findings", {
+    treeDataProvider: tree,
+    showCollapseAll: true,
+  });
+  context.subscriptions.push(diagnostics, view);
 
   const statusBar = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Left,
@@ -164,33 +114,38 @@ export function activate(context: vscode.ExtensionContext): void {
   statusBar.command = "contextcheck.checkWorkspace";
   context.subscriptions.push(statusBar);
 
-  async function refresh(doc: vscode.TextDocument): Promise<void> {
-    if (!isContextFile(doc)) return;
-    const diags = await lintDocument(doc);
-    diagnostics.set(doc.uri, diags);
-    updateStatusBar();
-  }
+  function updateStatusBarAndBadge(): void {
+    const total = tree.totalCount();
+    view.badge =
+      total > 0
+        ? { value: total, tooltip: `${total} Context Check issues` }
+        : undefined;
 
-  function updateStatusBar(): void {
-    let count = 0;
-    diagnostics.forEach((_uri, diags) => {
-      count += diags.length;
-    });
     const active = vscode.window.activeTextEditor?.document;
     if (active && isContextFile(active)) {
+      const here = diagnostics.get(active.uri)?.length ?? 0;
       statusBar.text =
-        count === 0
+        here === 0
           ? "$(check) Context Check"
-          : `$(warning) Context Check: ${count}`;
-      statusBar.tooltip = "Context Check findings — click to re-check workspace";
+          : `$(warning) Context Check: ${here}`;
+      statusBar.tooltip = "Context Check — click to re-check the workspace";
       statusBar.show();
     } else {
       statusBar.hide();
     }
   }
 
+  async function refresh(doc: vscode.TextDocument): Promise<void> {
+    if (!isContextFile(doc)) return;
+    const { diagnostics: diags, findings } = await lintDocument(doc);
+    diagnostics.set(doc.uri, diags);
+    tree.set(doc.uri, findings);
+    updateStatusBarAndBadge();
+  }
+
   async function checkWorkspace(): Promise<void> {
     diagnostics.clear();
+    tree.clear();
     const uris = await vscode.workspace.findFiles(
       `**/{${CONTEXT_FILENAMES.join(",")}}`,
       "**/node_modules/**",
@@ -198,16 +153,50 @@ export function activate(context: vscode.ExtensionContext): void {
     for (const uri of uris) {
       try {
         const doc = await vscode.workspace.openTextDocument(uri);
-        diagnostics.set(uri, await lintDocument(doc));
+        const { diagnostics: diags, findings } = await lintDocument(doc);
+        diagnostics.set(uri, diags);
+        tree.set(uri, findings);
       } catch {
-        // A file that can't be opened is skipped rather than crashing.
+        // Skip files that can't be opened rather than aborting the scan.
       }
     }
-    updateStatusBar();
+    updateStatusBarAndBadge();
     vscode.window.setStatusBarMessage(
       `Context Check: scanned ${uris.length} context file(s)`,
       3000,
     );
+  }
+
+  async function goToFinding(ref: FindingRef): Promise<void> {
+    const doc = await vscode.workspace.openTextDocument(ref.uri);
+    const editor = await vscode.window.showTextDocument(doc);
+    const line = Math.max(0, Math.min(ref.finding.line - 1, doc.lineCount - 1));
+    const pos = new vscode.Position(line, Math.max(0, ref.finding.column - 1));
+    editor.selection = new vscode.Selection(pos, pos);
+    editor.revealRange(
+      new vscode.Range(pos, pos),
+      vscode.TextEditorRevealType.InCenter,
+    );
+  }
+
+  /** Apply a finding's fix from the sidebar (accepts a tree item or a ref). */
+  async function applyFix(arg: TreeItemWithRef | FindingRef): Promise<void> {
+    const ref: FindingRef | undefined =
+      "finding" in arg ? (arg as FindingRef) : (arg as TreeItemWithRef).ref;
+    if (!ref) return;
+    const doc = await vscode.workspace.openTextDocument(ref.uri);
+    const edit = buildFix(doc, ref.finding);
+    if (!edit) {
+      vscode.window.showInformationMessage(
+        "This finding has no automatic fix.",
+      );
+      return;
+    }
+    const ok = await vscode.workspace.applyEdit(edit);
+    if (ok) {
+      await doc.save();
+      await refresh(doc);
+    }
   }
 
   context.subscriptions.push(
@@ -215,13 +204,18 @@ export function activate(context: vscode.ExtensionContext): void {
       "contextcheck.checkWorkspace",
       checkWorkspace,
     ),
+    vscode.commands.registerCommand("contextcheck.refresh", checkWorkspace),
+    vscode.commands.registerCommand("contextcheck.goToFinding", goToFinding),
+    vscode.commands.registerCommand("contextcheck.applyFix", applyFix),
     vscode.workspace.onDidSaveTextDocument((doc) => void refresh(doc)),
     vscode.workspace.onDidOpenTextDocument((doc) => void refresh(doc)),
     vscode.workspace.onDidCloseTextDocument((doc) => {
       diagnostics.delete(doc.uri);
-      updateStatusBar();
+      updateStatusBarAndBadge();
     }),
-    vscode.window.onDidChangeActiveTextEditor(() => updateStatusBar()),
+    vscode.window.onDidChangeActiveTextEditor(() =>
+      updateStatusBarAndBadge(),
+    ),
     vscode.languages.registerCodeActionsProvider(
       { language: "markdown" },
       new ContextCheckActions(),
@@ -229,12 +223,11 @@ export function activate(context: vscode.ExtensionContext): void {
     ),
   );
 
-  // Lint anything already open on activation.
-  for (const doc of vscode.workspace.textDocuments) {
-    void refresh(doc);
-  }
+  // Populate the view once on activation, then lint anything already open.
+  void checkWorkspace();
+  for (const doc of vscode.workspace.textDocuments) void refresh(doc);
 }
 
 export function deactivate(): void {
-  // Nothing to clean up beyond the disposables registered above.
+  // Disposables registered above are cleaned up by VS Code.
 }

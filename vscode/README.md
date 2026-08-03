@@ -41,7 +41,11 @@ Everything runs locally. **Zero network calls, no API keys, no telemetry, no sig
 - **Case-mismatch paths** — a path that resolves on macOS but breaks
   case-sensitive Linux CI (a real, silent bug class).
 - **Quick fixes** — replace a stale command with the suggested task, or remove a
-  dead-path reference, in one click.
+  dead-path reference, in one click (from the editor lightbulb or the sidebar).
+- **Dedicated sidebar** — a Context Check icon in the Activity Bar opens a
+  **Findings** view grouping every issue by file. Refresh the whole workspace
+  from its title bar, click a finding to jump to it, or hit the inline wrench to
+  apply its fix — without opening the file.
 - **Status bar count** — see at a glance how many issues the active context file has.
 - **Check the whole workspace** — one command lints every `AGENTS.md` / `CLAUDE.md` at once.
 - **Deterministic & explainable** — every finding maps to a rule you can read.
@@ -73,7 +77,7 @@ Everything runs locally. **Zero network calls, no API keys, no telemetry, no sig
 
 | Command | Description |
 | --- | --- |
-| `Context Check: Check workspace` | Scan every context file in the workspace and report all findings. |
+| `Context Check: Check workspace` | Scan every context file in the workspace and report all findings. Also available as the refresh button in the sidebar. |
 
 ## What it checks
 
