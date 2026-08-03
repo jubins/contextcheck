@@ -28,7 +28,6 @@ Problems panel, with one-click quick fixes.
 
 Everything runs locally. **Zero network calls, no API keys, no telemetry, no sign-up.**
 
-<!-- TODO: record the hero GIF (see media/RECORDING.md), save as media/demo.gif, and change .png -> .gif below -->
 <p align="center">
   <img src="media/demo.png" alt="Context Check flagging a stale command and a dead path in AGENTS.md" width="800" />
 </p>
@@ -58,14 +57,12 @@ Everything runs locally. **Zero network calls, no API keys, no telemetry, no sig
 4. **Fix issues** with the lightbulb (⌘.) quick fixes, or run
    **Context Check: Check workspace** from the Command Palette to scan everything.
 
-<!-- TODO: record the quick-fix GIF (see media/RECORDING.md), save as media/quickfix.gif, and change .png -> .gif below -->
 <p align="center">
   <img src="media/quickfix.png" alt="Applying a quick fix to replace a stale command" width="800" />
 </p>
 
 ## Screenshots
 
-<!-- TODO: replace these three placeholders with real screenshots -->
 <p align="center">
   <img src="media/screenshot-problems.png" alt="Findings in the Problems panel" width="32%" />
   <img src="media/screenshot-inline.png" alt="Inline diagnostics on a stale command" width="32%" />
