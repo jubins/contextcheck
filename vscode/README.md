@@ -19,10 +19,9 @@ endpoints are retired). Use vsmarketplacebadges.dev, e.g.:
 
 </div>
 
-Your AGENTS.md is telling your agent things that aren't true. Context Check
-lints AI agent context files (`AGENTS.md`, `CLAUDE.md`, and friends) against your
-**actual repository** — flagging commands, paths, and casing that have gone stale,
-right inside VS Code.
+Context Check lints AI agent context files (`AGENTS.md`, `CLAUDE.md`, and friends)
+against your **actual repository** — flagging commands, paths, and casing that have
+gone stale, right inside VS Code.
 
 > Free and open source. No account, no API key, no telemetry — every check runs
 > locally and is deterministic.

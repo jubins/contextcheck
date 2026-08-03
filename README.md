@@ -11,10 +11,9 @@
 
 </div>
 
-Your AGENTS.md is telling your agent things that aren't true. Context Check lints
-AI agent context files (`AGENTS.md`, `CLAUDE.md`, and friends) against your
-**actual repository** — flagging commands, paths, and casing that have gone stale.
-Deterministic, offline, no API keys.
+Context Check lints AI agent context files (`AGENTS.md`, `CLAUDE.md`, and friends)
+against your **actual repository** — flagging commands, paths, and casing that have
+gone stale. Deterministic, offline, no API keys.
 
 This repository contains two things:
 
