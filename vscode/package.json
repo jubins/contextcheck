@@ -1,7 +1,7 @@
 {
   "name": "contextcheck",
   "displayName": "Context Check",
-  "description": "Lint AI agent context files (AGENTS.md, CLAUDE.md) against your actual repository. Deterministic, offline, no API keys.",
+  "description": "Keep your AGENTS.md honest — automatically. Lint AI agent context files (AGENTS.md, CLAUDE.md) against your actual repository. Deterministic, offline, no API keys.",
   "version": "0.1.0",
   "publisher": "jubinsoni",
   "license": "MIT",

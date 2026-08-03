@@ -4,6 +4,8 @@
 
 # Context Check
 
+**Keep your AGENTS.md honest — automatically.**
+
 [![CI](https://github.com/jubins/contextcheck/actions/workflows/ci.yml/badge.svg)](https://github.com/jubins/contextcheck/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -17,7 +19,7 @@ endpoints are retired). Use vsmarketplacebadges.dev, e.g.:
 
 </div>
 
-**Your AGENTS.md is telling your agent things that aren't true.** Context Check
+Your AGENTS.md is telling your agent things that aren't true. Context Check
 lints AI agent context files (`AGENTS.md`, `CLAUDE.md`, and friends) against your
 **actual repository** — flagging commands, paths, and casing that have gone stale,
 right inside VS Code.
