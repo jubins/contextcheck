@@ -1,0 +1,11 @@
+{
+  "name": "demo-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "build:prod": "tsc -p tsconfig.prod.json",
+    "test": "vitest run",
+    "lint": "eslint ."
+  }
+}
