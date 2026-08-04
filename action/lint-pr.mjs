@@ -32,7 +32,11 @@ const { lintFile, findContextFiles, worstSeverity } = await import(
 );
 
 const MARKER = "<!-- contextcheck-report -->";
-const SEVERITY_RANK = { info: 1, warn: 2, error: 3 };
+const SEVERITY_RANK = new Map([
+  ["info", 1],
+  ["warn", 2],
+  ["error", 3],
+]);
 
 const workingDir = resolve(process.env.CTX_WORKING_DIRECTORY || ".");
 const threshold = (process.env.CTX_SEVERITY_THRESHOLD || "none").toLowerCase();
@@ -57,9 +61,11 @@ const CONTEXT_BASENAMES = ["AGENTS.md", "CLAUDE.md", "GEMINI.md", ".cursorrules"
 
 function sh(cmd, args) {
   // Run git in the working directory so the diff targets the right repo.
+  // Silence stderr — callers treat any failure as "no changed files".
   return execFileSync(cmd, args, {
     encoding: "utf8",
     cwd: workingDir,
+    stdio: ["ignore", "pipe", "ignore"],
   }).trim();
 }
 
@@ -124,7 +130,10 @@ async function main() {
   // Decide exit code from the threshold.
   if (threshold !== "none") {
     const worst = worstSeverity(results);
-    if (worst && SEVERITY_RANK[worst] >= (SEVERITY_RANK[threshold] ?? 99)) {
+    if (
+      worst &&
+      (SEVERITY_RANK.get(worst) ?? 0) >= (SEVERITY_RANK.get(threshold) ?? 99)
+    ) {
       console.error(
         `Context Check: found ${worst}-level findings at or above the '${threshold}' threshold.`,
       );
@@ -155,13 +164,13 @@ function buildComment({ results, allFindings, driftWarning, changedManifests }) 
     return lines.join("\n");
   }
 
-  const counts = allFindings.reduce((acc, f) => {
-    acc[f.severity] = (acc[f.severity] || 0) + 1;
-    return acc;
-  }, {});
+  const counts = new Map();
+  for (const f of allFindings) {
+    counts.set(f.severity, (counts.get(f.severity) ?? 0) + 1);
+  }
   const summary = ["error", "warn", "info"]
-    .filter((s) => counts[s])
-    .map((s) => `${severityEmoji(s)} ${counts[s]} ${s}`)
+    .filter((s) => counts.has(s))
+    .map((s) => `${severityEmoji(s)} ${counts.get(s)} ${s}`)
     .join(" · ");
   lines.push(`Found **${allFindings.length}** issue(s): ${summary}`, "");
 
@@ -181,7 +190,7 @@ function buildComment({ results, allFindings, driftWarning, changedManifests }) 
 
   lines.push(
     "",
-    "<sub>Posted by [Context Check](https://github.com/jubins/contextcheck) — lint your AGENTS.md against the real repo.</sub>",
+    "_Posted by [Context Check](https://github.com/jubins/contextcheck) — lint your AGENTS.md against the real repo._",
   );
   return lines.join("\n");
 }
@@ -203,10 +212,22 @@ async function gh(method, path, body) {
   return res.json();
 }
 
+/** Read and parse the GitHub event payload, or null if unavailable. */
+function readEventPayload() {
+  const eventPath = process.env.GITHUB_EVENT_PATH;
+  // Only ever read the path GitHub itself provides in the Action environment.
+  if (typeof eventPath !== "string" || eventPath.length === 0) return null;
+  try {
+    return JSON.parse(readFileSync(eventPath, "utf8"));
+  } catch {
+    return null;
+  }
+}
+
 /** Post a new sticky comment, or update the existing one (found by marker). */
 async function upsertComment(body) {
-  const event = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, "utf8"));
-  const pr = event.pull_request?.number;
+  const event = readEventPayload();
+  const pr = event?.pull_request?.number;
   const repo = process.env.GITHUB_REPOSITORY; // owner/name
   if (!pr || !repo) {
     console.log(body.replace(MARKER, "").trim());
