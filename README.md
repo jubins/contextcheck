@@ -5,6 +5,7 @@
 # Context Check
 
 [![npm](https://img.shields.io/npm/v/contextcheck-cli.svg)](https://www.npmjs.com/package/contextcheck-cli)
+[![VS Code Marketplace](https://vsmarketplacebadges.dev/version-short/jubinsoni.contextcheck.png?label=marketplace)](https://marketplace.visualstudio.com/items?itemName=jubinsoni.contextcheck)
 [![CI](https://github.com/jubins/contextcheck/actions/workflows/ci.yml/badge.svg)](https://github.com/jubins/contextcheck/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 

@@ -7,10 +7,14 @@
 **Keep your AGENTS.md honest — automatically.**
 
 [![Version](https://vsmarketplacebadges.dev/version-short/jubinsoni.contextcheck.png)](https://marketplace.visualstudio.com/items?itemName=jubinsoni.contextcheck)
-[![Installs](https://vsmarketplacebadges.dev/installs-short/jubinsoni.contextcheck.png)](https://marketplace.visualstudio.com/items?itemName=jubinsoni.contextcheck)
-[![Rating](https://vsmarketplacebadges.dev/rating-star/jubinsoni.contextcheck.png)](https://marketplace.visualstudio.com/items?itemName=jubinsoni.contextcheck)
 [![CI](https://github.com/jubins/contextcheck/actions/workflows/ci.yml/badge.svg)](https://github.com/jubins/contextcheck/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
+<!-- Add back once adoption grows (installs/rating look weak at low counts):
+[![Installs](https://vsmarketplacebadges.dev/installs-short/jubinsoni.contextcheck.png)](https://marketplace.visualstudio.com/items?itemName=jubinsoni.contextcheck)
+[![Rating](https://vsmarketplacebadges.dev/rating-star/jubinsoni.contextcheck.png)](https://marketplace.visualstudio.com/items?itemName=jubinsoni.contextcheck)
+-->
+
 
 </div>
 
