@@ -15,8 +15,21 @@
  */
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { lintFile, findContextFiles, worstSeverity } from "contextcheck-cli";
-import { join, resolve } from "node:path";
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
+
+// Load the library from the globally-installed contextcheck-cli. We import by
+// an explicit path (not a bare specifier) so Node can never resolve it to this
+// repo when the Action dogfoods itself — the repo's own package is also named
+// contextcheck-cli. CTX_CLI_ENTRY is set by action.yml.
+const cliEntry = process.env.CTX_CLI_ENTRY;
+if (!cliEntry) {
+  console.error("CTX_CLI_ENTRY is not set; cannot locate contextcheck-cli.");
+  process.exit(1);
+}
+const { lintFile, findContextFiles, worstSeverity } = await import(
+  pathToFileURL(cliEntry).href
+);
 
 const MARKER = "<!-- contextcheck-report -->";
 const SEVERITY_RANK = { info: 1, warn: 2, error: 3 };

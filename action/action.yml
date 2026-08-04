@@ -47,7 +47,9 @@ runs:
         CTX_SEVERITY_THRESHOLD: ${{ inputs.severity-threshold }}
         GITHUB_TOKEN: ${{ inputs.github-token }}
       run: |
-        # Make the globally-installed package importable by the runner script.
-        NODE_PATH="$(npm root -g)"
-        export NODE_PATH
+        # Resolve the globally-installed package's entry point and pass it
+        # explicitly, so the runner never accidentally loads a local package
+        # of the same name (this repo dogfoods itself).
+        CTX_CLI_ENTRY="$(npm root -g)/contextcheck-cli/dist/index.js"
+        export CTX_CLI_ENTRY
         node "$GITHUB_ACTION_PATH/lint-pr.mjs"
