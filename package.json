@@ -1,6 +1,6 @@
 {
   "name": "contextcheck-cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Lint AI agent context files (AGENTS.md, CLAUDE.md) against the actual repository.",
   "type": "module",
   "license": "MIT",
@@ -44,7 +44,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "tsc --noEmit",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build && npm test",
+    "release": "node scripts/release.mjs"
   },
   "dependencies": {
     "commander": "^12.1.0",
