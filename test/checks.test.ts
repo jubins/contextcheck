@@ -121,6 +121,58 @@ describe("case-mismatch-path", () => {
   });
 });
 
+describe("wrong-package-manager", () => {
+  it("positive: flags npm commands in a pnpm repo", async () => {
+    // pnpm-repo has pnpm-lock.yaml and a `build` script.
+    const f = await lint("```bash\nnpm run build\n```", "pnpm-repo");
+    const wpm = f.find((x) => x.rule === "wrong-package-manager");
+    expect(wpm).toBeDefined();
+    expect(wpm!.severity).toBe("info");
+    expect(wpm!.message).toContain("pnpm");
+  });
+
+  it("negative: does not flag npm commands in an npm repo", async () => {
+    const f = await lint("```bash\nnpm run build\n```", "npm-repo");
+    expect(f.some((x) => x.rule === "wrong-package-manager")).toBe(false);
+  });
+
+  it("negative: does not flag non-npm commands in a pnpm repo", async () => {
+    const f = await lint("```bash\npnpm run build\n```", "pnpm-repo");
+    expect(f.some((x) => x.rule === "wrong-package-manager")).toBe(false);
+  });
+});
+
+describe("undocumented-task", () => {
+  it("positive: flags an important task the file never mentions", async () => {
+    // npm-repo defines test/build/lint; document only build.
+    const f = await lint("```bash\nnpm run build\n```", "npm-repo");
+    const undoc = f.filter((x) => x.rule === "undocumented-task");
+    const names = undoc.map((x) => x.message);
+    expect(undoc.length).toBeGreaterThan(0);
+    expect(undoc[0]!.severity).toBe("info");
+    // `test` and `lint` are undocumented; `build` is documented.
+    expect(names.some((m) => m.includes("`test`"))).toBe(true);
+    expect(names.some((m) => m.includes("`lint`"))).toBe(true);
+    expect(names.some((m) => m.includes("`build`"))).toBe(false);
+  });
+
+  it("negative: no finding when all important tasks are documented", async () => {
+    const f = await lint(
+      "```bash\nnpm run build\nnpm test\nnpm run lint\n```",
+      "npm-repo",
+    );
+    expect(f.some((x) => x.rule === "undocumented-task")).toBe(false);
+  });
+
+  it("does not flag tasks the repo doesn't define", async () => {
+    // npm-repo has no `typecheck` or `dev` script, so those aren't flagged.
+    const f = await lint("```bash\nnpm run build\nnpm test\nnpm run lint\n```", "npm-repo");
+    const msgs = f.filter((x) => x.rule === "undocumented-task").map((x) => x.message);
+    expect(msgs.some((m) => m.includes("typecheck"))).toBe(false);
+    expect(msgs.some((m) => m.includes("`dev`"))).toBe(false);
+  });
+});
+
 describe("rule config", () => {
   it("disabling stale-command silences it", async () => {
     const res = await lintSource(
@@ -130,5 +182,15 @@ describe("rule config", () => {
       { rules: { "stale-command": false } },
     );
     expect(res.findings.some((x) => x.rule === "stale-command")).toBe(false);
+  });
+
+  it("disabling undocumented-task silences it", async () => {
+    const res = await lintSource(
+      "```bash\nnpm run build\n```",
+      fx("npm-repo"),
+      "AGENTS.md",
+      { rules: { "undocumented-task": false } },
+    );
+    expect(res.findings.some((x) => x.rule === "undocumented-task")).toBe(false);
   });
 });

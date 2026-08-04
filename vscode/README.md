@@ -105,6 +105,8 @@ Once everything is fixed, the view is clean:
 | `stale-command` | Error | A command names a task the repo doesn't define. Suggests the closest match. |
 | `dead-path` | Error / Warning | A referenced path doesn't exist. Error for explicit paths, warning for prose mentions. |
 | `case-mismatch-path` | Error | A path exists but with different casing — breaks case-sensitive CI. |
+| `wrong-package-manager` | Info | A command uses `npm` while the repo's lockfile is pnpm/yarn/bun. |
+| `undocumented-task` | Info | The repo defines an important task (`test`/`build`/`lint`/`typecheck`/`dev`) the context file never mentions. |
 
 ---
 

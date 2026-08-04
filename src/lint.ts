@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import type { Finding } from "./types.js";
 import { extractClaims } from "./extract/index.js";
-import { NpmFamilyResolver } from "./resolve/npm.js";
+import { NpmFamilyResolver, detectPackageManager } from "./resolve/npm.js";
 import { PathResolver } from "./resolve/path.js";
 import type { Resolver, TaskInfo } from "./resolve/types.js";
 import { runChecks, type CheckContext, type RuleConfig } from "./checks/index.js";
@@ -34,7 +34,14 @@ export async function buildContext(repoRoot: string): Promise<CheckContext> {
       if (!tasks.has(name)) tasks.set(name, info);
     }
   }
-  return { repoRoot, resolvers, tasks, pathResolver: new PathResolver(repoRoot) };
+  const packageManager = await detectPackageManager(repoRoot);
+  return {
+    repoRoot,
+    resolvers,
+    tasks,
+    pathResolver: new PathResolver(repoRoot),
+    packageManager,
+  };
 }
 
 /**

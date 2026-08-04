@@ -2,6 +2,15 @@
 
 All notable changes to the Context Check extension are documented here.
 
+## [Unreleased]
+
+### Added
+
+- **`wrong-package-manager`** rule (info) — flags `npm` commands in a repo whose
+  lockfile indicates pnpm/yarn/bun.
+- **`undocumented-task`** rule (info) — flags important tasks the repo defines
+  (`test`/`build`/`lint`/`typecheck`/`dev`) that the context file never mentions.
+
 ## [0.1.2] - 2026-08-04
 
 ### Changed

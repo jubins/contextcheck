@@ -23,7 +23,13 @@ function buildRuleConfig(opts: CliOptions): RuleConfig | undefined {
   if (opts.only) {
     const keep = new Set(opts.only.split(",").map((s) => s.trim()));
     // Disable everything not listed. We only know rule ids that exist today.
-    const all = ["stale-command", "dead-path", "case-mismatch-path"];
+    const all = [
+      "stale-command",
+      "dead-path",
+      "case-mismatch-path",
+      "wrong-package-manager",
+      "undocumented-task",
+    ];
     const cfg: RuleConfig = {};
     for (const rule of all) cfg[rule] = keep.has(rule);
     return cfg;

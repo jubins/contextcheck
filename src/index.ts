@@ -25,6 +25,8 @@ export {
   runChecks,
   checkStaleCommand,
   checkDeadPath,
+  checkWrongPackageManager,
+  checkUndocumentedTask,
   levenshtein,
   closestMatch,
   commandTarget,
