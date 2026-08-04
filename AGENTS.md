@@ -17,6 +17,7 @@ npm install
 ```bash
 npm run build      # bundle the library with tsup
 npm test           # run the vitest suite
+npm run lint       # type-check (alias of typecheck)
 npm run typecheck  # type-check without emitting
 ```
 
