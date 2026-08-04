@@ -1,0 +1,19 @@
+name: Context Check
+
+# Dogfood: run our own Action against this repo's AGENTS.md on every PR.
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  contextcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # Use the Action from this repo (local path) rather than a published tag.
+      - uses: ./action

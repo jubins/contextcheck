@@ -1,0 +1,53 @@
+name: "Context Check"
+description: "Lint AGENTS.md / CLAUDE.md against the real repo and comment on PRs."
+author: "Jubin Soni"
+branding:
+  icon: "check-circle"
+  color: "blue"
+
+inputs:
+  working-directory:
+    description: "Directory to lint (the repo root by default)."
+    required: false
+    default: "."
+  severity-threshold:
+    description: "Severity that fails the check: error | warn | info | none. Default none (warn-only)."
+    required: false
+    default: "none"
+  version:
+    description: "Version of contextcheck-cli to use (npm dist-tag or version)."
+    required: false
+    default: "latest"
+  github-token:
+    description: "Token used to post the PR comment."
+    required: false
+    default: ${{ github.token }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: Fetch base ref for the diff
+      shell: bash
+      if: ${{ github.base_ref != '' }}
+      run: git fetch --no-tags --depth=1 origin "$GITHUB_BASE_REF"
+
+    - name: Install contextcheck-cli
+      shell: bash
+      run: npm install -g "contextcheck-cli@${{ inputs.version }}"
+
+    - name: Run Context Check
+      shell: bash
+      env:
+        CTX_WORKING_DIRECTORY: ${{ inputs.working-directory }}
+        CTX_SEVERITY_THRESHOLD: ${{ inputs.severity-threshold }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+      run: |
+        # Make the globally-installed package importable by the runner script.
+        NODE_PATH="$(npm root -g)"
+        export NODE_PATH
+        node "$GITHUB_ACTION_PATH/lint-pr.mjs"
