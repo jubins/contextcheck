@@ -1,0 +1,107 @@
+name: Release
+
+# Publishes the npm package (contextcheck-cli) and the VS Code extension
+# (jubinsoni.contextcheck) when a v* tag is pushed. Both are versioned in
+# lockstep: the tag (e.g. v0.1.1) must match the version in package.json and
+# vscode/package.json, or the release fails before publishing anything.
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify versions match the tag
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.tag.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Derive version from tag
+        id: tag
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Check package.json versions match the tag
+        run: |
+          TAG="${{ steps.tag.outputs.version }}"
+          CORE=$(node -p "require('./package.json').version")
+          EXT=$(node -p "require('./vscode/package.json').version")
+          echo "tag=$TAG  core=$CORE  ext=$EXT"
+          if [ "$CORE" != "$TAG" ] || [ "$EXT" != "$TAG" ]; then
+            echo "::error::Tag v$TAG does not match package.json ($CORE) and/or vscode/package.json ($EXT)."
+            exit 1
+          fi
+
+  test:
+    name: Test & build
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - name: Install & test the extension
+        working-directory: vscode
+        run: |
+          npm install
+          npm test
+          npm run build
+
+  publish-npm:
+    name: Publish to npm
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          registry-url: "https://registry.npmjs.org"
+      - run: npm ci
+      - run: npm run build
+      - name: Publish
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  publish-vscode:
+    name: Publish the VS Code extension
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Build core (bundled by the extension)
+        run: |
+          npm ci
+          npm run build
+      - name: Install extension deps
+        working-directory: vscode
+        run: npm install
+      - name: Publish to the VS Code Marketplace
+        working-directory: vscode
+        run: npx --yes @vscode/vsce publish --no-dependencies -p "$VSCE_PAT"
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+      # Optional: also publish to Open VSX if an OVSX_PAT secret is set.
+      - name: Publish to Open VSX (if configured)
+        if: ${{ secrets.OVSX_PAT != '' }}
+        working-directory: vscode
+        run: npx --yes ovsx publish --no-dependencies -p "$OVSX_PAT"
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
