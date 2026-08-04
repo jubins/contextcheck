@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import type { Finding } from "ctxcheck";
+import type { Finding } from "contextcheck-cli";
 
 /** Pull the backtick-wrapped suggestion token, e.g. "did you mean `build`?". */
 export function extractSuggestedToken(

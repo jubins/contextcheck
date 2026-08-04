@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { basename } from "node:path";
-import type { Finding } from "ctxcheck";
+import type { Finding } from "contextcheck-cli";
 import { fixTitle } from "./fixes.js";
 
 /** A finding paired with the file it came from. */

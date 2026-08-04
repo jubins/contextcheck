@@ -4,7 +4,7 @@
 
 # Context Check
 
-[![npm](https://img.shields.io/npm/v/ctxcheck.svg)](https://www.npmjs.com/package/ctxcheck)
+[![npm](https://img.shields.io/npm/v/contextcheck-cli.svg)](https://www.npmjs.com/package/contextcheck-cli)
 [![CI](https://github.com/jubins/contextcheck/actions/workflows/ci.yml/badge.svg)](https://github.com/jubins/contextcheck/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -24,9 +24,9 @@ that.
 ## Install
 
 ```bash
-npm install -g ctxcheck
+npm install -g contextcheck-cli
 # or run without installing:
-npx ctxcheck
+npx contextcheck-cli
 ```
 
 The package installs two identical binaries: `ctxcheck` and `contextcheck`.
@@ -69,7 +69,7 @@ AGENTS.md — 2 issues
 drops straight into CI:
 
 ```yaml
-- run: npx ctxcheck --severity-threshold error
+- run: npx contextcheck-cli --severity-threshold error
 ```
 
 ## What it checks
@@ -92,7 +92,7 @@ findings sidebar. Docs in [`vscode/`](vscode/).
 The package also exposes a library:
 
 ```ts
-import { lintFile } from "ctxcheck";
+import { lintFile } from "contextcheck-cli";
 
 const { findings } = await lintFile("AGENTS.md", process.cwd());
 ```

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import type { Finding } from "ctxcheck";
+import type { Finding } from "contextcheck-cli";
 
 // The `vscode` module isn't available under vitest, so stub the tiny surface
 // that fixes.ts touches (Position, Range, WorkspaceEdit).

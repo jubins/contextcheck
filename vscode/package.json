@@ -134,7 +134,7 @@
     "publish": "vsce publish"
   },
   "dependencies": {
-    "ctxcheck": "file:.."
+    "contextcheck-cli": "file:.."
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
