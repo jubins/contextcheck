@@ -1,0 +1,12 @@
+# Codacy configuration. See https://docs.codacy.com/repositories-configure/codacy-configuration-file/
+---
+exclude_paths:
+  - "dist/**"
+  - "vscode/dist/**"
+  - "vscode/out/**"
+  - "**/node_modules/**"
+  - "test/fixtures/**"
+  - "vscode/demo-workspace/**"
+  - "vscode/media/**"
+  - "**/*.map"
+  - "**/*.vsix"

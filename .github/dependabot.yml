@@ -1,0 +1,42 @@
+version: 2
+updates:
+  # Core library / CLI dependencies (root package.json)
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # Batch minor/patch dev-dependency bumps into one PR to reduce noise.
+      dev-dependencies:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+    labels:
+      - dependencies
+
+  # VS Code extension dependencies
+  - package-ecosystem: npm
+    directory: "/vscode"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      dev-dependencies:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+    labels:
+      - dependencies
+      - vscode
+
+  # GitHub Actions used in workflows (ci.yml, release.yml)
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    labels:
+      - dependencies
+      - github-actions

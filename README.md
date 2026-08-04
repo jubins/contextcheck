@@ -7,6 +7,10 @@
 [![npm](https://img.shields.io/npm/v/contextcheck-cli.svg)](https://www.npmjs.com/package/contextcheck-cli)
 [![VS Code Marketplace](https://vsmarketplacebadges.dev/version-short/jubinsoni.contextcheck.png?label=marketplace)](https://marketplace.visualstudio.com/items?itemName=jubinsoni.contextcheck)
 [![CI](https://github.com/jubins/contextcheck/actions/workflows/ci.yml/badge.svg)](https://github.com/jubins/contextcheck/actions/workflows/ci.yml)
+<!-- Codacy: after connecting this repo at https://app.codacy.com and adding the
+     GitHub repository, copy the badge from Codacy → Settings → Badge and replace
+     CODACY_PROJECT_ID below with the real token. -->
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/CODACY_PROJECT_ID)](https://app.codacy.com/gh/jubins/contextcheck/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 **Keep your AGENTS.md honest — automatically.**
