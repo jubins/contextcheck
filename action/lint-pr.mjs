@@ -27,6 +27,7 @@ if (!cliEntry) {
   console.error("CTX_CLI_ENTRY is not set; cannot locate contextcheck-cli.");
   process.exit(1);
 }
+// codacy:ignore CTX_CLI_ENTRY is a fixed path set by action.yml, not user input.
 const { lintFile, findContextFiles, worstSeverity } = await import(
   pathToFileURL(cliEntry).href
 );
@@ -218,6 +219,7 @@ function readEventPayload() {
   // Only ever read the path GitHub itself provides in the Action environment.
   if (typeof eventPath !== "string" || eventPath.length === 0) return null;
   try {
+    // codacy:ignore GITHUB_EVENT_PATH is provided by the runner, not user input.
     return JSON.parse(readFileSync(eventPath, "utf8"));
   } catch {
     return null;
