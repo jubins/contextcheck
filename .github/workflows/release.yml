@@ -164,3 +164,14 @@ jobs:
           else
             gh release create "$TAG" --title "$TAG" --notes "$NOTES"
           fi
+
+      - name: Move the major-version tag for the GitHub Action
+        env:
+          VERSION: ${{ needs.verify.outputs.version }}
+        run: |
+          # External users reference the Action as `@v1`. Re-point that moving
+          # major tag at this release so they get patches automatically.
+          MAJOR="v${VERSION%%.*}"
+          git tag -f "$MAJOR"
+          git push origin "$MAJOR" --force
+          echo "Moved $MAJOR to $GITHUB_SHA"
