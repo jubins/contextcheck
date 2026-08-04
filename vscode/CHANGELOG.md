@@ -2,7 +2,10 @@
 
 All notable changes to the Context Check extension are documented here.
 
-## [Unreleased]
+## [1.0.0] - 2026-08-04
+
+First stable release. The npm package, VS Code extension, and GitHub Action are
+now aligned at v1.
 
 ### Added
 
@@ -10,6 +13,9 @@ All notable changes to the Context Check extension are documented here.
   lockfile indicates pnpm/yarn/bun.
 - **`undocumented-task`** rule (info) — flags important tasks the repo defines
   (`test`/`build`/`lint`/`typecheck`/`dev`) that the context file never mentions.
+- **GitHub Action** (`jubins/contextcheck/action@v1`) — lints context files on
+  pull requests, posts a single self-updating comment, and warns when a PR
+  changes a manifest but no context file.
 
 ## [0.1.2] - 2026-08-04
 
