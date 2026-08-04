@@ -84,6 +84,30 @@ drops straight into CI:
 | `wrong-package-manager` | Info | A command uses `npm` while the repo's lockfile is pnpm/yarn/bun. |
 | `undocumented-task` | Info | The repo defines an important task (`test`/`build`/`lint`/`typecheck`/`dev`) the context file never mentions. |
 
+## GitHub Action
+
+Catch drift where it actually bites — in pull requests. The
+[Context Check Action](action/) lints changed context files on every PR, posts a
+single self-updating comment with the findings, and warns when a PR changes a
+manifest (`package.json`, …) but forgets to update `AGENTS.md`.
+
+```yaml
+# .github/workflows/contextcheck.yml
+on: pull_request
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  contextcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: jubins/contextcheck/action@v1
+```
+
+Warn-only by default so it never blocks a merge. See [`action/`](action/) for options.
+
 ## VS Code extension
 
 Prefer to see findings inline as you edit? Install

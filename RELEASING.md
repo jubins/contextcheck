@@ -40,6 +40,26 @@ Pushing the tag triggers the workflow, which:
 3. Publishes `contextcheck-cli` to npm.
 4. Publishes the extension to the VS Code Marketplace (and Open VSX if
    `OVSX_PAT` is set).
+5. Creates the GitHub Release, and **re-points the major-version tag**
+   (`v1`, `v2`, …) at this commit.
+
+## The GitHub Action's `@v1` tag
+
+External users reference the Action as `jubins/contextcheck/action@v1` — a
+*moving* tag that always points at the latest `1.x` release, so they get patches
+without pinning. The release workflow moves it automatically (step 5 above).
+
+The **first** `v1` must be created by hand, once `action/` is on `master`:
+
+```bash
+git checkout master && git pull
+git tag v1            # points at the current release commit
+git push origin v1
+```
+
+After that, every `npm run release` keeps `v1` current. When you ship a
+breaking change to the Action, bump to a new major (`v2`) and update the docs'
+`@v1` references.
 
 ## Before the first automated release
 
