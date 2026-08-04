@@ -68,6 +68,22 @@ export function commandTarget(normalized: string): CommandTarget | undefined {
     return { task: tokens[1], runner };
   }
 
-  // Other runners (cargo, go, poetry, ...) aren't script-name based; skip.
+  // Python task runners.
+  // `poetry run X` / `uv run X` → script/task X (skip poetry's own verbs).
+  if ((runner === "poetry" || runner === "uv") && tokens[1] === "run" && tokens[2]) {
+    return { task: tokens[2], runner };
+  }
+  // `tox -e X` → environment X.
+  if (runner === "tox") {
+    const i = tokens.indexOf("-e");
+    if (i >= 0 && tokens[i + 1]) return { task: tokens[i + 1]!, runner };
+  }
+  // `nox -s X` → session X.
+  if (runner === "nox") {
+    const i = tokens.indexOf("-s");
+    if (i >= 0 && tokens[i + 1]) return { task: tokens[i + 1]!, runner };
+  }
+
+  // Other runners (cargo, go, ...) aren't script-name based; skip.
   return undefined;
 }
