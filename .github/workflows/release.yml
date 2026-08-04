@@ -14,21 +14,26 @@ on:
       - "v*"
   workflow_dispatch:
 
+# contents: write lets the final job create the GitHub Release.
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   verify:
     name: Verify versions
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Check versions are in sync (and match the tag, if any)
+        id: v
         run: |
           CORE=$(node -p "require('./package.json').version")
           EXT=$(node -p "require('./vscode/package.json').version")
           echo "core=$CORE  ext=$EXT  ref=$GITHUB_REF_NAME  event=$GITHUB_EVENT_NAME"
+          echo "version=$CORE" >> "$GITHUB_OUTPUT"
           if [ "$CORE" != "$EXT" ]; then
             echo "::error::package.json ($CORE) and vscode/package.json ($EXT) versions are out of sync."
             exit 1
@@ -110,3 +115,52 @@ jobs:
         if: ${{ env.OVSX_PAT != '' }}
         working-directory: vscode
         run: npx --yes ovsx publish --no-dependencies -p "$OVSX_PAT"
+
+  github-release:
+    name: Create the GitHub Release
+    needs: [verify, publish-npm, publish-vscode]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract this version's changelog notes
+        id: notes
+        env:
+          VERSION: ${{ needs.verify.outputs.version }}
+        run: |
+          # Pull the section for this version out of vscode/CHANGELOG.md
+          # (between "## [x.y.z]" and the next "## [").
+          NOTES=$(awk -v v="$VERSION" '
+            $0 ~ "^## \\[" v "\\]" {grab=1; next}
+            grab && /^## \[/ {exit}
+            grab {print}
+          ' vscode/CHANGELOG.md)
+          if [ -z "$NOTES" ]; then NOTES="Release v$VERSION"; fi
+          {
+            echo "notes<<EOF"
+            echo "$NOTES"
+            echo ""
+            echo "**npm:** https://www.npmjs.com/package/contextcheck-cli/v/$VERSION"
+            echo "**VS Code Marketplace:** https://marketplace.visualstudio.com/items?itemName=jubinsoni.contextcheck"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create or update the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.verify.outputs.version }}
+          NOTES: ${{ steps.notes.outputs.notes }}
+        run: |
+          TAG="v$VERSION"
+          # Ensure the tag exists (manual runs may not have pushed one).
+          if ! git rev-parse "$TAG" >/dev/null 2>&1; then
+            git tag "$TAG"
+            git push origin "$TAG"
+          fi
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --notes "$NOTES" --title "$TAG"
+          else
+            gh release create "$TAG" --title "$TAG" --notes "$NOTES"
+          fi
