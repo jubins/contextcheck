@@ -80,6 +80,8 @@ jobs:
     name: Publish the VS Code extension
     needs: test
     runs-on: ubuntu-latest
+    env:
+      OVSX_PAT: ${{ secrets.OVSX_PAT }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -100,8 +102,6 @@ jobs:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
       # Optional: also publish to Open VSX if an OVSX_PAT secret is set.
       - name: Publish to Open VSX (if configured)
-        if: ${{ secrets.OVSX_PAT != '' }}
+        if: ${{ env.OVSX_PAT != '' }}
         working-directory: vscode
         run: npx --yes ovsx publish --no-dependencies -p "$OVSX_PAT"
-        env:
-          OVSX_PAT: ${{ secrets.OVSX_PAT }}
