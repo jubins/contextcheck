@@ -2,6 +2,14 @@
 
 All notable changes to the Context Check extension are documented here.
 
+## [0.1.2] - 2026-08-04
+
+### Changed
+
+- No functional changes. First release cut through the automated release
+  pipeline, publishing the npm package (`contextcheck-cli`) and the extension
+  in lockstep at the same version.
+
 ## [0.1.1] - 2026-08-03
 
 ### Added
