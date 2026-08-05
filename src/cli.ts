@@ -10,6 +10,7 @@ import {
   SEVERITY_RANK,
 } from "./report.js";
 import { renderSarif } from "./sarif.js";
+import { explainResults } from "./explain.js";
 import type { RuleConfig } from "./checks/index.js";
 import type { Severity } from "./types.js";
 
@@ -17,6 +18,7 @@ interface CliOptions {
   format: "human" | "json" | "sarif";
   severityThreshold: Severity;
   recursive?: boolean;
+  explain?: boolean;
   only?: string;
   ignore?: string;
 }
@@ -86,10 +88,35 @@ async function runCheck(target: string, opts: CliOptions): Promise<void> {
     process.stdout.write(renderHuman(results));
   }
 
+  // Optional LLM tier: propose diffs for the findings already reported.
+  if (opts.explain) {
+    await runExplain(results);
+  }
+
   // Exit non-zero when any finding meets or exceeds the threshold.
   const worst = worstSeverity(results);
   if (worst && SEVERITY_RANK[worst] >= SEVERITY_RANK[opts.severityThreshold]) {
     process.exitCode = 1;
+  }
+}
+
+/** Print suggested-fix diffs for findings. Never writes to disk. */
+async function runExplain(results: LintResult[]): Promise<void> {
+  try {
+    const explanations = await explainResults(results);
+    for (const ex of explanations) {
+      process.stdout.write(`\n--- explain: ${ex.file} ---\n`);
+      if (ex.error) process.stdout.write(`  (skipped: ${ex.error})\n`);
+      else if (!ex.diff) process.stdout.write("  (no fix proposed)\n");
+      else process.stdout.write(ex.diff + "\n");
+    }
+    process.stdout.write(
+      "\nReview the diffs above and apply them yourself; --explain never edits files.\n",
+    );
+  } catch (err) {
+    process.stderr.write(
+      `--explain failed: ${err instanceof Error ? err.message : String(err)}\n`,
+    );
   }
 }
 
@@ -110,6 +137,7 @@ program
     "error",
   )
   .option("-r, --recursive", "recursively lint nested context files (monorepo mode)")
+  .option("--explain", "propose LLM fix diffs for findings (opt-in; needs ANTHROPIC_API_KEY)")
   .option("--only <rules>", "comma-separated rule ids to run exclusively")
   .option("--ignore <rules>", "comma-separated rule ids to skip")
   .action(async (path: string, opts: CliOptions) => {
@@ -127,6 +155,7 @@ program
     "error",
   )
   .option("-r, --recursive", "recursively lint nested context files (monorepo mode)")
+  .option("--explain", "propose LLM fix diffs for findings (opt-in; needs ANTHROPIC_API_KEY)")
   .option("--only <rules>", "comma-separated rule ids to run exclusively")
   .option("--ignore <rules>", "comma-separated rule ids to skip")
   .action(async (path: string, opts: CliOptions) => {

@@ -31,6 +31,9 @@ now aligned at v1.
   file, resolves each against its nearest manifest scope, and adds a
   `cross-file-contradiction` rule for sibling files that document the same task
   differently (skipping the `@AGENTS.md` bridge pattern).
+- **Optional LLM tier** — `--explain` (opt-in, BYOK via `ANTHROPIC_API_KEY`)
+  asks an LLM to propose a diff that fixes only the already-reported findings.
+  Prints the diff; never edits files. The deterministic linter needs no key.
 - **Polyglot support** — command claims are now verified across many
   ecosystems in addition to the npm family: Make targets, Python
   (`pyproject.toml`/`tox`), Rust (`Cargo.toml` bins/examples and aliases),

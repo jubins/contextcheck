@@ -85,6 +85,12 @@ export {
 export { renderSarif } from "./sarif.js";
 
 export {
+  explainResults,
+  type ExplainOptions,
+  type ExplainResult,
+} from "./explain.js";
+
+export {
   computeStaleness,
   type StalenessInfo,
 } from "./git/index.js";
