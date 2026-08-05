@@ -6,6 +6,12 @@
     "build": "tsc",
     "build:prod": "tsc -p tsconfig.prod.json",
     "test": "vitest run",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint ."
+  },
+  "devDependencies": {
+    "vitest": "^2.0.0",
+    "eslint": "^9.0.0",
+    "typescript": "^5.5.0"
   }
 }
