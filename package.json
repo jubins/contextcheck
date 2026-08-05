@@ -1,6 +1,6 @@
 {
   "name": "contextcheck-cli",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Lint AI agent context files (AGENTS.md, CLAUDE.md) against the actual repository.",
   "type": "module",
   "license": "MIT",
