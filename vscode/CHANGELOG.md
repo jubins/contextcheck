@@ -27,6 +27,10 @@ now aligned at v1.
 - **`staleness`** rule — flags when many commits (especially manifest-touching
   ones) have landed since the context file last changed. Info above 10 manifest
   commits, warning above 30. Read-only git; degrades silently outside git.
+- **Monorepo support** — `--recursive` (CLI) discovers every nested context
+  file, resolves each against its nearest manifest scope, and adds a
+  `cross-file-contradiction` rule for sibling files that document the same task
+  differently (skipping the `@AGENTS.md` bridge pattern).
 - **Polyglot support** — command claims are now verified across many
   ecosystems in addition to the npm family: Make targets, Python
   (`pyproject.toml`/`tox`), Rust (`Cargo.toml` bins/examples and aliases),
