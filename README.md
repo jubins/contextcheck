@@ -142,7 +142,8 @@ jobs:
       - uses: jubins/contextcheck/action@v1
 ```
 
-Warn-only by default so it never blocks a merge. See [`action/`](action/) for options.
+Warn-only by default so it never blocks a merge. It can also upload **SARIF**
+so findings appear inline in the Files Changed tab. See [`action/`](action/) for options.
 
 ## VS Code extension
 
