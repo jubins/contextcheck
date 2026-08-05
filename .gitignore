@@ -8,3 +8,4 @@ vscode/out/
 vscode/dist/
 *.vsix
 coverage/
+test/fixtures/config-repo/

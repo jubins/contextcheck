@@ -42,6 +42,32 @@ findings.
 | `severity-threshold` | `none` | Fail the check at this level: `error` \| `warn` \| `info` \| `none`. Default `none` (warn-only, never blocks a merge). |
 | `version` | `latest` | Version of `contextcheck-cli` to use. |
 | `github-token` | `${{ github.token }}` | Token used to post the comment. |
+| `sarif-file` | `""` | If set, write SARIF to this path for code-scanning upload. |
+
+## Show findings in "Files Changed" (SARIF)
+
+Set `sarif-file` and upload it, so findings appear inline in the PR's Files
+Changed tab via GitHub code scanning:
+
+```yaml
+permissions:
+  contents: read
+  pull-requests: write
+  security-events: write   # required to upload SARIF
+jobs:
+  contextcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: jubins/contextcheck/action@v1
+        with:
+          sarif-file: contextcheck.sarif
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: contextcheck.sarif
+```
 
 ## Making it a required check
 

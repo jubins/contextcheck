@@ -64,7 +64,8 @@ jobs:
             echo "Bumping $CORE -> $NEXT ($BUMP)"
             node -e "const f='package.json';const p=require('./'+f);p.version='$NEXT';require('fs').writeFileSync(f,JSON.stringify(p,null,2)+'\n')"
             node -e "const f='vscode/package.json';const p=require('./'+f);p.version='$NEXT';require('fs').writeFileSync(f,JSON.stringify(p,null,2)+'\n')"
-            git add package.json vscode/package.json
+            printf '/** Package version. Kept in sync with package.json by the release workflow. */\nexport const VERSION = "%s";\n' "$NEXT" > src/version.ts
+            git add package.json vscode/package.json src/version.ts
             git commit -m "Release v$NEXT"
             git tag "v$NEXT"
             git push origin HEAD:"${GITHUB_REF_NAME}"

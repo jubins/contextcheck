@@ -9,11 +9,12 @@ import {
   worstSeverity,
   SEVERITY_RANK,
 } from "./report.js";
+import { renderSarif } from "./sarif.js";
 import type { RuleConfig } from "./checks/index.js";
 import type { Severity } from "./types.js";
 
 interface CliOptions {
-  format: "human" | "json";
+  format: "human" | "json" | "sarif";
   severityThreshold: Severity;
   only?: string;
   ignore?: string;
@@ -65,6 +66,8 @@ async function runCheck(target: string, opts: CliOptions): Promise<void> {
 
   if (opts.format === "json") {
     process.stdout.write(renderJson(results) + "\n");
+  } else if (opts.format === "sarif") {
+    process.stdout.write(renderSarif(results, repoRoot) + "\n");
   } else {
     process.stdout.write(renderHuman(results));
   }
@@ -86,7 +89,7 @@ program
 
 program
   .argument("[path]", "directory to check", ".")
-  .option("-f, --format <format>", "output format: human | json", "human")
+  .option("-f, --format <format>", "output format: human | json | sarif", "human")
   .option(
     "-t, --severity-threshold <level>",
     "severity that causes a non-zero exit: error | warn | info",
@@ -102,7 +105,7 @@ program
 program
   .command("check")
   .argument("[path]", "directory to check", ".")
-  .option("-f, --format <format>", "output format: human | json", "human")
+  .option("-f, --format <format>", "output format: human | json | sarif", "human")
   .option(
     "-t, --severity-threshold <level>",
     "severity that causes a non-zero exit",

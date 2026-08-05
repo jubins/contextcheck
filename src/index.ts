@@ -74,5 +74,12 @@ export {
   worstSeverity,
 } from "./report.js";
 
-/** Package version, kept in sync with package.json manually for now. */
-export const VERSION = "0.1.0";
+export { renderSarif } from "./sarif.js";
+
+export {
+  loadConfig,
+  mergeRules,
+  type ContextCheckConfig,
+} from "./config.js";
+
+export { VERSION } from "./version.js";

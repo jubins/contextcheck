@@ -60,10 +60,28 @@ AGENTS.md — 2 issues
 
 | Flag | Description |
 |---|---|
-| `--format <human\|json>` | Output format. Default `human`. |
+| `--format <human\|json\|sarif>` | Output format. Default `human`. `sarif` for GitHub code scanning. |
 | `--severity-threshold <error\|warn\|info>` | Severity that causes a non-zero exit. Default `error`. |
 | `--only <rules>` | Comma-separated rule ids to run exclusively. |
 | `--ignore <rules>` | Comma-separated rule ids to skip. |
+
+### Configuration file
+
+Drop a `.contextcheckrc.json` at your repo root to set per-repo defaults:
+
+```json
+{
+  "rules": { "oversized": false },
+  "severity": { "undocumented-task": "warn" },
+  "ignore": ["docs/legacy"]
+}
+```
+
+- **`rules`** — enable/disable rules (`false` disables).
+- **`severity`** — override a rule's severity (`error` / `warn` / `info`).
+- **`ignore`** — drop findings from files whose path contains any of these substrings.
+
+CLI flags (`--only` / `--ignore`) take precedence over the config file.
 
 ### Exit codes
 
