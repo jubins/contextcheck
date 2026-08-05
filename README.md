@@ -84,6 +84,18 @@ drops straight into CI:
 | `wrong-package-manager` | Info | A command uses `npm` while the repo's lockfile is pnpm/yarn/bun. |
 | `undocumented-task` | Info | The repo defines an important task (`test`/`build`/`lint`/`typecheck`/`dev`) the context file never mentions. |
 
+## Supported ecosystems
+
+Command claims are verified against tasks the repo actually defines, across:
+
+- **npm family** — `package.json` scripts (npm/pnpm/yarn/bun)
+- **Make** — `Makefile` targets (incl. `.PHONY`)
+- **Python** — `pyproject.toml` scripts (project/poetry/hatch) and `tox` envs
+- **Rust** — `Cargo.toml` bins/examples and `.cargo/config.toml` aliases
+- **Go** — `go.mod` (module detection; tasks via `Makefile`)
+
+Path and casing checks are language-agnostic and work in any repo.
+
 ## GitHub Action
 
 Catch drift where it actually bites — in pull requests. The

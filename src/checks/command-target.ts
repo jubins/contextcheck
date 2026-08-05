@@ -39,6 +39,30 @@ const PM_BUILTINS = new Set([
   "create",
 ]);
 
+/** Cargo's own subcommands — not user-defined aliases. */
+const CARGO_BUILTINS = new Set([
+  "build",
+  "b",
+  "run",
+  "r",
+  "test",
+  "t",
+  "check",
+  "c",
+  "bench",
+  "doc",
+  "fmt",
+  "clippy",
+  "clean",
+  "update",
+  "install",
+  "publish",
+  "add",
+  "remove",
+  "init",
+  "new",
+]);
+
 export function commandTarget(normalized: string): CommandTarget | undefined {
   const tokens = normalized.split(" ").filter(Boolean);
   if (tokens.length === 0) return undefined;
@@ -84,6 +108,16 @@ export function commandTarget(normalized: string): CommandTarget | undefined {
     if (i >= 0 && tokens[i + 1]) return { task: tokens[i + 1]!, runner };
   }
 
-  // Other runners (cargo, go, ...) aren't script-name based; skip.
+  // Cargo: named bins/examples and custom aliases are verifiable.
+  if (runner === "cargo" && tokens[1]) {
+    const bin = tokens.indexOf("--bin");
+    if (bin >= 0 && tokens[bin + 1]) return { task: tokens[bin + 1]!, runner };
+    const ex = tokens.indexOf("--example");
+    if (ex >= 0 && tokens[ex + 1]) return { task: tokens[ex + 1]!, runner };
+    // A non-builtin second token is a custom alias (e.g. `cargo xtask`).
+    if (!CARGO_BUILTINS.has(tokens[1])) return { task: tokens[1], runner };
+  }
+
+  // Other runners (go, ...) aren't script-name based; skip.
   return undefined;
 }
