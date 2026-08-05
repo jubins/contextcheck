@@ -9,3 +9,5 @@ vscode/dist/
 *.vsix
 coverage/
 test/fixtures/config-repo/
+research/out/
+repos.txt

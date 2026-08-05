@@ -1,0 +1,4 @@
+# One GitHub repo URL per line. Lines starting with # are ignored.
+# Source real lists via GitHub code search for "AGENTS.md" or "CLAUDE.md".
+https://github.com/openai/openai-node
+https://github.com/anthropics/anthropic-sdk-typescript

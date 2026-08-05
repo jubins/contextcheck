@@ -11,6 +11,7 @@ export default tseslint.config(
       "test/fixtures/**",
       "vscode/**",
       "action/**",
+      "research/**",
       "coverage/**",
     ],
   },
