@@ -189,11 +189,11 @@ export function checkToolMismatch(
     if (claim.kind !== "tool") continue;
     const named = claim.value;
     if (present.has(named)) continue; // the claimed tool is actually present
-    const category = TOOL_CATEGORIES[named];
+    const category = TOOL_CATEGORIES.get(named);
     if (!category) continue;
     // Is a competing tool in the same category present instead?
     const competitor = [...present].find(
-      (t) => TOOL_CATEGORIES[t] === category && t !== named,
+      (t) => TOOL_CATEGORIES.get(t) === category && t !== named,
     );
     if (!competitor) continue;
     findings.push({
@@ -224,7 +224,8 @@ function sectionSizes(source: string): Section[] {
     const heading = line.match(/^#{1,3}\s+(.*)$/);
     if (heading) {
       if (current) sections.push(current);
-      current = { title: heading[1]?.trim() ?? "", lines: 0 };
+      const title = heading[1];
+      current = { title: title ? title.trim() : "", lines: 0 };
     } else if (current) {
       current.lines++;
     }

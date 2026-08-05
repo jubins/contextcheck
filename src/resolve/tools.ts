@@ -31,14 +31,15 @@ export async function detectTools(repoRoot: string): Promise<Set<string>> {
     }
   }
 
-  // Python: scan pyproject.toml and tox.ini text for tool names as whole words.
+  // Python: scan pyproject.toml, tox.ini, and requirements for tool names.
+  // Tokenize into lowercased words and test set membership — equivalent to a
+  // whole-word match, but without building a regex per tool.
   for (const file of ["pyproject.toml", "tox.ini", "requirements.txt"]) {
     const text = await readTextSafe(join(repoRoot, file));
     if (!text) continue;
-    const lower = text.toLowerCase();
+    const words = new Set(text.toLowerCase().split(/[^a-z0-9]+/));
     for (const tool of KNOWN_TOOLS) {
-      // Word-boundary match to avoid substrings (e.g. "ava" inside "javadoc").
-      if (new RegExp(`\\b${tool}\\b`).test(lower)) found.add(tool);
+      if (words.has(tool)) found.add(tool);
     }
   }
 
