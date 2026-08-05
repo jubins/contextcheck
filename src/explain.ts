@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readTextSafe } from "./resolve/fs-utils.js";
 import type { Finding } from "./types.js";
 import type { LintResult } from "./lint.js";
 
@@ -66,7 +66,8 @@ function buildPrompt(file: string, source: string, findings: Finding[]): string 
 /** Extract the first ```diff fenced block from the model's response. */
 function extractDiff(text: string): string | null {
   const m = text.match(/```diff\n([\s\S]*?)```/);
-  if (m) return m[1]?.trimEnd() ?? null;
+  const captured = m?.[1];
+  if (captured !== undefined) return captured.trimEnd();
   // Fallback: a bare unified diff without a fence.
   if (/^(---|diff )/m.test(text)) return text.trim();
   return null;
@@ -122,10 +123,8 @@ export async function explainResults(
   const out: ExplainResult[] = [];
   for (const result of results) {
     if (result.findings.length === 0) continue;
-    let source: string;
-    try {
-      source = await readFile(result.file, "utf8");
-    } catch {
+    const source = await readTextSafe(result.file);
+    if (source === undefined) {
       out.push({ file: result.file, diff: null, error: "could not read file" });
       continue;
     }
