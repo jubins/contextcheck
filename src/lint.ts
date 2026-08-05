@@ -4,6 +4,8 @@ import { extractClaims } from "./extract/index.js";
 import { NpmFamilyResolver, detectPackageManager } from "./resolve/npm.js";
 import { MakefileResolver } from "./resolve/make.js";
 import { PythonResolver } from "./resolve/python.js";
+import { RustResolver } from "./resolve/rust.js";
+import { GoResolver } from "./resolve/go.js";
 import { PathResolver } from "./resolve/path.js";
 import type { Resolver, TaskInfo } from "./resolve/types.js";
 import { runChecks, type CheckContext, type RuleConfig } from "./checks/index.js";
@@ -24,6 +26,8 @@ const ALL_RESOLVERS: Resolver[] = [
   new NpmFamilyResolver(),
   new MakefileResolver(),
   new PythonResolver(),
+  new RustResolver(),
+  new GoResolver(),
 ];
 
 /**

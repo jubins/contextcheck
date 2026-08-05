@@ -7,6 +7,12 @@ export {
   parseToxEnvlist,
 } from "./python.js";
 export {
+  RustResolver,
+  parseArrayOfTableNames,
+  parseCargoAliases,
+} from "./rust.js";
+export { GoResolver, parseGoModule } from "./go.js";
+export {
   PathResolver,
   lastSegment,
   parentDir,
