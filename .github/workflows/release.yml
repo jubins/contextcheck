@@ -37,7 +37,7 @@ jobs:
     outputs:
       version: ${{ steps.v.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           # Push the release bump/tag as the user behind GH_PAT so the push is
@@ -95,7 +95,7 @@ jobs:
     needs: verify
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.verify.outputs.sha }}
       - uses: actions/setup-node@v4
@@ -124,7 +124,7 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.verify.outputs.sha }}
       - uses: actions/setup-node@v4
@@ -155,7 +155,7 @@ jobs:
     env:
       OVSX_PAT: ${{ secrets.OVSX_PAT }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.verify.outputs.sha }}
       - uses: actions/setup-node@v4
@@ -193,7 +193,7 @@ jobs:
     needs: [verify, publish-npm, publish-vscode]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           ref: ${{ needs.verify.outputs.sha }}
