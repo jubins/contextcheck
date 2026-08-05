@@ -20,20 +20,29 @@ Add these under **Settings → Secrets and variables → Actions** in the GitHub
 
 ## Cutting a release
 
+### Option A — from GitHub (recommended)
+
+1. **Actions** tab → **Release** workflow → **Run workflow**.
+2. Pick the bump: **patch**, **minor**, or **major**.
+3. Run.
+
+The workflow bumps **both** `package.json` files in lockstep, commits
+`Release vX.Y.Z`, tags and pushes it, then publishes and creates the GitHub
+Release — no local steps. (Nothing published if versions are already live.)
+
+### Option B — locally
+
 From a clean `master`:
 
 ```bash
 npm run release -- patch      # or: minor | major | 0.2.0
-```
-
-This bumps **both** `package.json` files to the same version, commits
-`Release vX.Y.Z`, and creates the `vX.Y.Z` tag. Then push:
-
-```bash
 git push && git push origin vX.Y.Z
 ```
 
-Pushing the tag triggers the workflow, which:
+This bumps both `package.json` files, commits `Release vX.Y.Z`, and tags it.
+Pushing the tag triggers the same workflow.
+
+### In both cases the workflow:
 
 1. **Verifies** the tag matches both `package.json` versions (fails otherwise).
 2. Runs typecheck, tests, and builds (core + extension).
