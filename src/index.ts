@@ -58,13 +58,20 @@ export {
 export {
   lintSource,
   lintFile,
+  lintWorkspace,
   buildContext,
   type LintOptions,
   type LintResult,
 } from "./lint.js";
 
 export {
+  checkCrossFileContradictions,
+  type ContextFileInput,
+} from "./checks/cross-file.js";
+
+export {
   findContextFiles,
+  findAllContextFiles,
   findRepoRoot,
   CONTEXT_FILENAMES,
 } from "./discover.js";

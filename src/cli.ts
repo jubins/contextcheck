@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import { resolve } from "node:path";
 import { VERSION } from "./index.js";
-import { lintFile, type LintResult } from "./lint.js";
+import { lintFile, lintWorkspace, type LintResult } from "./lint.js";
 import { findContextFiles, findRepoRoot } from "./discover.js";
 import {
   renderHuman,
@@ -16,6 +16,7 @@ import type { Severity } from "./types.js";
 interface CliOptions {
   format: "human" | "json" | "sarif";
   severityThreshold: Severity;
+  recursive?: boolean;
   only?: string;
   ignore?: string;
 }
@@ -33,6 +34,7 @@ function buildRuleConfig(opts: CliOptions): RuleConfig | undefined {
       "tool-mismatch",
       "oversized",
       "staleness",
+      "cross-file-contradiction",
     ];
     const cfg: RuleConfig = {};
     for (const rule of all) cfg[rule] = keep.has(rule);
@@ -49,20 +51,31 @@ function buildRuleConfig(opts: CliOptions): RuleConfig | undefined {
 async function runCheck(target: string, opts: CliOptions): Promise<void> {
   const cwd = resolve(process.cwd(), target ?? ".");
   const repoRoot = await findRepoRoot(cwd);
-  const files = await findContextFiles(cwd);
+  const rules = buildRuleConfig(opts);
 
-  if (files.length === 0) {
-    process.stderr.write(
-      `No context files (AGENTS.md, CLAUDE.md, ...) found in ${cwd}\n`,
-    );
-    process.exitCode = 0;
-    return;
+  let results: LintResult[];
+  if (opts.recursive) {
+    // Monorepo mode: every nested context file, with cross-file checks.
+    results = await lintWorkspace(cwd, { rules });
+  } else {
+    const files = await findContextFiles(cwd);
+    if (files.length === 0) {
+      process.stderr.write(
+        `No context files (AGENTS.md, CLAUDE.md, ...) found in ${cwd}\n`,
+      );
+      process.exitCode = 0;
+      return;
+    }
+    results = [];
+    for (const file of files) {
+      results.push(await lintFile(file, repoRoot, { rules }));
+    }
   }
 
-  const rules = buildRuleConfig(opts);
-  const results: LintResult[] = [];
-  for (const file of files) {
-    results.push(await lintFile(file, repoRoot, { rules }));
+  if (opts.recursive && results.length === 0) {
+    process.stderr.write(`No context files found under ${cwd}\n`);
+    process.exitCode = 0;
+    return;
   }
 
   if (opts.format === "json") {
@@ -96,6 +109,7 @@ program
     "severity that causes a non-zero exit: error | warn | info",
     "error",
   )
+  .option("-r, --recursive", "recursively lint nested context files (monorepo mode)")
   .option("--only <rules>", "comma-separated rule ids to run exclusively")
   .option("--ignore <rules>", "comma-separated rule ids to skip")
   .action(async (path: string, opts: CliOptions) => {
@@ -112,6 +126,7 @@ program
     "severity that causes a non-zero exit",
     "error",
   )
+  .option("-r, --recursive", "recursively lint nested context files (monorepo mode)")
   .option("--only <rules>", "comma-separated rule ids to run exclusively")
   .option("--ignore <rules>", "comma-separated rule ids to skip")
   .action(async (path: string, opts: CliOptions) => {
