@@ -49,3 +49,20 @@ jobs:
       - name: Package extension (dry run)
         working-directory: vscode
         run: npx --yes @vscode/vsce package --no-dependencies -o /tmp/contextcheck.vsix
+
+      # The extension bundles the core; node_modules is excluded from the
+      # .vsix, so a leftover external require() means it cannot activate.
+      # Guard against shipping a stub bundle again.
+      - name: Verify the core is bundled into the extension
+        run: |
+          if unzip -p /tmp/contextcheck.vsix extension/dist/extension.js \
+            | grep -q 'require("contextcheck-cli")'; then
+            echo "::error::extension.js still requires contextcheck-cli — the core was not bundled (check noExternal in vscode/tsup.config.ts)."
+            exit 1
+          fi
+          SIZE=$(unzip -p /tmp/contextcheck.vsix extension/dist/extension.js | wc -c)
+          echo "bundled extension.js: $SIZE bytes"
+          if [ "$SIZE" -lt 100000 ]; then
+            echo "::error::extension.js is only $SIZE bytes — the core does not appear to be bundled."
+            exit 1
+          fi
