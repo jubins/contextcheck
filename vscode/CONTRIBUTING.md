@@ -14,7 +14,22 @@ cd vscode && npm install && npm run build
 ```
 
 Press **F5** in the `vscode/` folder to launch an Extension Development Host
-against `vscode/demo-workspace/` (an `AGENTS.md` with intentional mistakes).
+against `vscode/demo-workspace/` — a small sample repo whose context files are
+wrong on purpose so nearly every rule fires.
+
+The demo workspace exercises eight of the nine rules out of the box:
+`stale-command`, `dead-path`, `case-mismatch-path`, `wrong-package-manager`
+(the repo has a `pnpm-lock.yaml` but the docs say `npm`), `undocumented-task`
+(the `Makefile`/`package.json` define `lint`/`typecheck`/`build` the docs skip),
+`tool-mismatch` (docs name Jest, `package.json` depends on vitest), `oversized`
+(the file crosses the 150-line threshold), and `cross-file-contradiction` (the
+sibling `CLAUDE.md` documents the `test` task with a different command). Run
+`node ../dist/cli.js demo-workspace --recursive` from `vscode/` to see them all,
+including the cross-file check which only runs in recursive mode.
+
+The ninth rule, `staleness`, is git-history-driven (it counts manifest-touching
+commits since the context file last changed) and can't be demonstrated with
+static fixture files, so it isn't triggered by the demo workspace.
 
 ## Known limitations / future work
 
