@@ -52,13 +52,47 @@ if (core.version !== ext.version) {
 
 const next = bump(core.version, arg);
 core.version = next;
+// Remember the originals so we can roll back if any step below fails.
+const originalCore = readFileSync(CORE, "utf8");
+const originalExt = readFileSync(EXT, "utf8");
+const prevVersion = core.version;
+
 ext.version = next;
 write(CORE, core);
 write(EXT, ext);
 
-execSync(`git add ${CORE} ${EXT}`);
-execSync(`git commit -m "Release v${next}"`, { stdio: "inherit" });
-execSync(`git tag v${next}`, { stdio: "inherit" });
+try {
+  execSync(`git add ${CORE} ${EXT}`);
+  execSync(`git commit -m "Release v${next}"`, { stdio: "inherit" });
+  execSync(`git tag v${next}`, { stdio: "inherit" });
+} catch (err) {
+  // Roll back everything this script changed so a rerun starts clean and
+  // doesn't bump again on top of a half-applied release.
+  console.error("\nRelease step failed — rolling back the version bump.");
+  // Drop the tag if it was created.
+  try {
+    execSync(`git tag -d v${next}`, { stdio: "ignore" });
+  } catch {
+    // Tag may not have been created; ignore.
+  }
+  // Undo the bump commit only if it is actually the last commit.
+  let lastMsg = "";
+  try {
+    lastMsg = execSync("git log -1 --format=%s").toString().trim();
+  } catch {
+    // No commits yet; nothing to undo.
+  }
+  if (lastMsg === `Release v${next}`) {
+    execSync("git reset --hard HEAD~1", { stdio: "ignore" });
+  } else {
+    // Commit never happened — just restore the working-tree files.
+    writeFileSync(CORE, originalCore);
+    writeFileSync(EXT, originalExt);
+    execSync(`git checkout -- ${CORE} ${EXT}`, { stdio: "ignore" });
+  }
+  console.error(`Restored version ${prevVersion}.`);
+  throw err;
+}
 
 console.log(`\nBumped to ${next} and tagged v${next}.`);
 console.log("Review, then push to trigger the release workflow:");

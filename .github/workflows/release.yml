@@ -81,8 +81,14 @@ jobs:
           registry-url: "https://registry.npmjs.org"
       - run: npm ci
       - run: npm run build
-      - name: Publish
-        run: npm publish --access public
+      - name: Publish (skip if this version is already on npm)
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "contextcheck-cli@$VERSION" version >/dev/null 2>&1; then
+            echo "contextcheck-cli@$VERSION is already published — skipping."
+          else
+            npm publish --access public
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -105,9 +111,17 @@ jobs:
       - name: Install extension deps
         working-directory: vscode
         run: npm install
-      - name: Publish to the VS Code Marketplace
+      - name: Publish to the VS Code Marketplace (skip if already published)
         working-directory: vscode
-        run: npx --yes @vscode/vsce publish --no-dependencies -p "$VSCE_PAT"
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          PUBLISHED=$(npx --yes @vscode/vsce show jubinsoni.contextcheck --json 2>/dev/null \
+            | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{try{console.log(JSON.parse(d).versions?.[0]?.version||'')}catch{console.log('')}})")
+          if [ "$PUBLISHED" = "$VERSION" ]; then
+            echo "jubinsoni.contextcheck@$VERSION is already published — skipping."
+          else
+            npx --yes @vscode/vsce publish --no-dependencies -p "$VSCE_PAT"
+          fi
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
       # Optional: also publish to Open VSX if an OVSX_PAT secret is set.

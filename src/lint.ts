@@ -2,6 +2,8 @@ import { readFile } from "node:fs/promises";
 import type { Finding } from "./types.js";
 import { extractClaims } from "./extract/index.js";
 import { NpmFamilyResolver, detectPackageManager } from "./resolve/npm.js";
+import { MakefileResolver } from "./resolve/make.js";
+import { PythonResolver } from "./resolve/python.js";
 import { PathResolver } from "./resolve/path.js";
 import type { Resolver, TaskInfo } from "./resolve/types.js";
 import { runChecks, type CheckContext, type RuleConfig } from "./checks/index.js";
@@ -18,7 +20,11 @@ export interface LintResult {
 }
 
 /** Resolvers we try, in order. Only those that `detect()` are used. */
-const ALL_RESOLVERS: Resolver[] = [new NpmFamilyResolver()];
+const ALL_RESOLVERS: Resolver[] = [
+  new NpmFamilyResolver(),
+  new MakefileResolver(),
+  new PythonResolver(),
+];
 
 /**
  * Build the shared check context for a repo: run applicable resolvers and

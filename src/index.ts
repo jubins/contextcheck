@@ -10,8 +10,13 @@ export type {
 export { extractClaims } from "./extract/index.js";
 export {
   NpmFamilyResolver,
+  MakefileResolver,
+  PythonResolver,
   PathResolver,
   detectPackageManager,
+  parseMakefileTargets,
+  parsePyprojectScripts,
+  parseToxEnvlist,
   lastSegment,
   parentDir,
   type Resolver,

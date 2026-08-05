@@ -43,6 +43,21 @@ Pushing the tag triggers the workflow, which:
 5. Creates the GitHub Release, and **re-points the major-version tag**
    (`v1`, `v2`, …) at this commit.
 
+## If a release fails
+
+The pipeline is safe to retry:
+
+- **`npm run release` rolls back** the version bump (both `package.json` files,
+  the commit, and the tag) if the local commit/tag step fails — so a rerun
+  starts from the previous version, never a double-bump.
+- **The publish steps are idempotent.** If a run publishes to npm but the
+  extension step fails, re-running the workflow (or pushing the tag again) skips
+  the npm publish (that version is already live) and retries only the extension.
+  Neither publish errors out on an already-published version.
+
+So after a partial failure, fix the cause (e.g. an expired `VSCE_PAT`) and
+re-run the workflow on the same tag — it completes only the missing pieces.
+
 ## The GitHub Action's `@v1` tag
 
 External users reference the Action as `jubins/contextcheck/action@v1` — a
