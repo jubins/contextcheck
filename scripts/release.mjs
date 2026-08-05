@@ -60,9 +60,15 @@ const prevVersion = core.version;
 ext.version = next;
 write(CORE, core);
 write(EXT, ext);
+const VERSION_TS = "src/version.ts";
+const originalVersionTs = readFileSync(VERSION_TS, "utf8");
+writeFileSync(
+  VERSION_TS,
+  `/** Package version. Kept in sync with package.json by the release workflow. */\nexport const VERSION = "${next}";\n`,
+);
 
 try {
-  execSync(`git add ${CORE} ${EXT}`);
+  execSync(`git add ${CORE} ${EXT} ${VERSION_TS}`);
   execSync(`git commit -m "Release v${next}"`, { stdio: "inherit" });
   execSync(`git tag v${next}`, { stdio: "inherit" });
 } catch (err) {
@@ -88,7 +94,8 @@ try {
     // Commit never happened — just restore the working-tree files.
     writeFileSync(CORE, originalCore);
     writeFileSync(EXT, originalExt);
-    execSync(`git checkout -- ${CORE} ${EXT}`, { stdio: "ignore" });
+    writeFileSync(VERSION_TS, originalVersionTs);
+    execSync(`git checkout -- ${CORE} ${EXT} ${VERSION_TS}`, { stdio: "ignore" });
   }
   console.error(`Restored version ${prevVersion}.`);
   throw err;

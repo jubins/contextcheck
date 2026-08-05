@@ -13,10 +13,15 @@ import { JvmResolver } from "./resolve/jvm.js";
 import { PathResolver } from "./resolve/path.js";
 import type { Resolver, TaskInfo } from "./resolve/types.js";
 import { runChecks, type CheckContext, type RuleConfig } from "./checks/index.js";
+import { loadConfig, mergeRules } from "./config.js";
 
 export interface LintOptions {
   /** Rule enable/disable map. Absent rules default to enabled. */
   rules?: RuleConfig;
+  /** Per-rule severity overrides applied after checks run. */
+  severityOverrides?: Record<string, string>;
+  /** Drop findings whose file path contains any of these substrings. */
+  ignore?: string[];
 }
 
 export interface LintResult {
@@ -77,16 +82,47 @@ export async function lintSource(
   const claims = extractClaims(source);
   const ctx = await buildContext(repoRoot);
   // `source` enables whole-file checks (oversized) without re-reading disk.
-  const findings = await runChecks(claims, { ...ctx, source }, options.rules);
+  let findings = await runChecks(claims, { ...ctx, source }, options.rules);
+  findings = applyOverrides(findings, options);
+  // Ignore patterns match the file path, so a match drops all its findings.
+  const ignored = options.ignore?.some((pat) => file.includes(pat)) ?? false;
+  if (ignored) findings = [];
   return { file, findings };
 }
 
-/** Lint a context file read from disk. */
+const VALID_SEVERITIES = new Set(["error", "warn", "info"]);
+
+/** Apply per-rule severity overrides from config to the findings. */
+function applyOverrides(
+  findings: Finding[],
+  options: LintOptions,
+): Finding[] {
+  const overrides = options.severityOverrides;
+  if (!overrides) return findings;
+  return findings.map((f) => {
+    const next = overrides[f.rule];
+    if (next && VALID_SEVERITIES.has(next)) {
+      return { ...f, severity: next as Finding["severity"] };
+    }
+    return f;
+  });
+}
+
+/**
+ * Lint a context file read from disk, merging in the repo's
+ * `.contextcheckrc.json` (CLI-provided options take precedence).
+ */
 export async function lintFile(
   filePath: string,
   repoRoot: string,
   options: LintOptions = {},
 ): Promise<LintResult> {
   const source = await readFile(filePath, "utf8");
-  return lintSource(source, repoRoot, filePath, options);
+  const config = await loadConfig(repoRoot);
+  const merged: LintOptions = {
+    rules: mergeRules(config.rules, options.rules),
+    severityOverrides: { ...config.severity, ...options.severityOverrides },
+    ignore: [...(config.ignore ?? []), ...(options.ignore ?? [])],
+  };
+  return lintSource(source, repoRoot, filePath, merged);
 }

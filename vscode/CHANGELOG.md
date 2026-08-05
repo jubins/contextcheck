@@ -19,7 +19,11 @@ now aligned at v1.
   lists the three largest sections.
 - **GitHub Action** (`jubins/contextcheck/action@v1`) — lints context files on
   pull requests, posts a single self-updating comment, and warns when a PR
-  changes a manifest but no context file.
+  changes a manifest but no context file. Supports SARIF upload so findings
+  appear in the Files Changed tab.
+- **`--format sarif`** — SARIF 2.1.0 output for GitHub code scanning.
+- **`.contextcheckrc.json`** — per-repo config for rule enable/disable,
+  severity overrides, and ignore patterns.
 - **Polyglot support** — command claims are now verified across many
   ecosystems in addition to the npm family: Make targets, Python
   (`pyproject.toml`/`tox`), Rust (`Cargo.toml` bins/examples and aliases),
