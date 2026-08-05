@@ -103,6 +103,7 @@ drops straight into CI:
 | `undocumented-task` | Info | The repo defines an important task (`test`/`build`/`lint`/`typecheck`/`dev`) the context file never mentions. |
 | `tool-mismatch` | Warning | The context file names a tool (e.g. Jest) while the repo uses a competitor (e.g. Vitest). |
 | `oversized` | Warning | The context file exceeds 150 lines; reports the largest sections. |
+| `staleness` | Info / Warning | Many commits (esp. manifest-touching) have landed since the context file changed. Info above 10, warning above 30. |
 
 ## Supported ecosystems
 

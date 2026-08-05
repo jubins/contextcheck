@@ -14,6 +14,7 @@ import { PathResolver } from "./resolve/path.js";
 import type { Resolver, TaskInfo } from "./resolve/types.js";
 import { runChecks, type CheckContext, type RuleConfig } from "./checks/index.js";
 import { loadConfig, mergeRules } from "./config.js";
+import { computeStaleness, type StalenessInfo } from "./git/index.js";
 
 export interface LintOptions {
   /** Rule enable/disable map. Absent rules default to enabled. */
@@ -22,6 +23,8 @@ export interface LintOptions {
   severityOverrides?: Record<string, string>;
   /** Drop findings whose file path contains any of these substrings. */
   ignore?: string[];
+  /** Precomputed git staleness for the file, enabling the staleness rule. */
+  staleness?: StalenessInfo;
 }
 
 export interface LintResult {
@@ -81,8 +84,13 @@ export async function lintSource(
 ): Promise<LintResult> {
   const claims = extractClaims(source);
   const ctx = await buildContext(repoRoot);
-  // `source` enables whole-file checks (oversized) without re-reading disk.
-  let findings = await runChecks(claims, { ...ctx, source }, options.rules);
+  // `source` enables whole-file checks (oversized) without re-reading disk;
+  // `staleness` (when provided) enables the git staleness rule.
+  let findings = await runChecks(
+    claims,
+    { ...ctx, source, staleness: options.staleness },
+    options.rules,
+  );
   findings = applyOverrides(findings, options);
   // Ignore patterns match the file path, so a match drops all its findings.
   const ignored = options.ignore?.some((pat) => file.includes(pat)) ?? false;
@@ -119,10 +127,19 @@ export async function lintFile(
 ): Promise<LintResult> {
   const source = await readFile(filePath, "utf8");
   const config = await loadConfig(repoRoot);
+  // Compute git staleness unless the rule is disabled or already provided.
+  const stalenessEnabled =
+    (config.rules?.staleness ?? options.rules?.staleness) !== false;
+  const staleness =
+    options.staleness ??
+    (stalenessEnabled
+      ? (await computeStaleness(repoRoot, filePath)) ?? undefined
+      : undefined);
   const merged: LintOptions = {
     rules: mergeRules(config.rules, options.rules),
     severityOverrides: { ...config.severity, ...options.severityOverrides },
     ignore: [...(config.ignore ?? []), ...(options.ignore ?? [])],
+    staleness,
   };
   return lintSource(source, repoRoot, filePath, merged);
 }

@@ -47,6 +47,7 @@ export {
   checkUndocumentedTask,
   checkToolMismatch,
   checkOversized,
+  checkStaleness,
   levenshtein,
   closestMatch,
   commandTarget,
@@ -75,6 +76,11 @@ export {
 } from "./report.js";
 
 export { renderSarif } from "./sarif.js";
+
+export {
+  computeStaleness,
+  type StalenessInfo,
+} from "./git/index.js";
 
 export {
   loadConfig,

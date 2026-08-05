@@ -32,6 +32,7 @@ function buildRuleConfig(opts: CliOptions): RuleConfig | undefined {
       "undocumented-task",
       "tool-mismatch",
       "oversized",
+      "staleness",
     ];
     const cfg: RuleConfig = {};
     for (const rule of all) cfg[rule] = keep.has(rule);
