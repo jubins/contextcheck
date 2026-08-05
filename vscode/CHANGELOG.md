@@ -24,6 +24,9 @@ now aligned at v1.
 - **`--format sarif`** — SARIF 2.1.0 output for GitHub code scanning.
 - **`.contextcheckrc.json`** — per-repo config for rule enable/disable,
   severity overrides, and ignore patterns.
+- **`staleness`** rule — flags when many commits (especially manifest-touching
+  ones) have landed since the context file last changed. Info above 10 manifest
+  commits, warning above 30. Read-only git; degrades silently outside git.
 - **Polyglot support** — command claims are now verified across many
   ecosystems in addition to the npm family: Make targets, Python
   (`pyproject.toml`/`tox`), Rust (`Cargo.toml` bins/examples and aliases),

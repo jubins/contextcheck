@@ -4,6 +4,7 @@ import { PathResolver } from "../resolve/path.js";
 import { closestMatch } from "./levenshtein.js";
 import { commandTarget } from "./command-target.js";
 import { TOOL_CATEGORIES } from "../extract/patterns.js";
+import type { StalenessInfo } from "../git/index.js";
 
 /** Everything a checker needs about the repo, gathered once. */
 export interface CheckContext {
@@ -19,6 +20,8 @@ export interface CheckContext {
   tools?: Set<string>;
   /** Raw source of the context file, for whole-file checks (oversized). */
   source?: string;
+  /** Git staleness info for the context file, if computable. */
+  staleness?: StalenessInfo;
 }
 
 /** Which rules are enabled. Absent = enabled. */
@@ -267,6 +270,32 @@ export function checkOversized(
   ];
 }
 
+/**
+ * The `staleness` checker: many commits (especially manifest-touching ones)
+ * have landed since the context file was last modified. Info above 10 manifest
+ * commits, warn above 30. Silent when git info is unavailable.
+ */
+export function checkStaleness(ctx: CheckContext): Finding[] {
+  const s = ctx.staleness;
+  if (!s) return [];
+  const manifest = s.manifestCommitsSince;
+  if (manifest <= 10) return [];
+  const severity = manifest > 30 ? "warn" : "info";
+  const modified = s.lastModified
+    ? ` (last modified ${s.lastModified.slice(0, 10)})`
+    : "";
+  return [
+    {
+      rule: "staleness",
+      severity,
+      message: `context file is ${s.commitsSince} commits behind — ${manifest} of them changed a manifest${modified}`,
+      line: 1,
+      column: 1,
+      fixable: false,
+    },
+  ];
+}
+
 /** Run all enabled checkers and return findings sorted by line then column. */
 export async function runChecks(
   claims: Claim[],
@@ -294,6 +323,9 @@ export async function runChecks(
   }
   if (enabled(config, "oversized")) {
     findings.push(...checkOversized(ctx.source));
+  }
+  if (enabled(config, "staleness")) {
+    findings.push(...checkStaleness(ctx));
   }
   findings.sort((a, b) => a.line - b.line || a.column - b.column);
   return findings;
