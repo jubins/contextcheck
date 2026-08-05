@@ -1,0 +1,15 @@
+plugins {
+    id 'java'
+}
+
+task hello {
+    doLast {
+        println 'Hello'
+    }
+}
+
+tasks.register('integrationTest') {
+    doLast {
+        println 'running integration tests'
+    }
+}

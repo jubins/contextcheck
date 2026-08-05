@@ -12,6 +12,9 @@ export {
   parseCargoAliases,
 } from "./rust.js";
 export { GoResolver, parseGoModule } from "./go.js";
+export { JustResolver, parseJustfileRecipes } from "./just.js";
+export { TaskResolver, parseTaskfileTasks } from "./task.js";
+export { JvmResolver, parseGradleTasks, parseMavenProfiles } from "./jvm.js";
 export {
   PathResolver,
   lastSegment,

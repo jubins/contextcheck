@@ -16,9 +16,11 @@ now aligned at v1.
 - **GitHub Action** (`jubins/contextcheck/action@v1`) — lints context files on
   pull requests, posts a single self-updating comment, and warns when a PR
   changes a manifest but no context file.
-- **Polyglot support** — command claims are now verified against Make targets,
-  Python (`pyproject.toml`/`tox`), and Rust (`Cargo.toml` bins/examples and
-  aliases), in addition to the npm family. Go repos are detected via `go.mod`.
+- **Polyglot support** — command claims are now verified across many
+  ecosystems in addition to the npm family: Make targets, Python
+  (`pyproject.toml`/`tox`), Rust (`Cargo.toml` bins/examples and aliases),
+  just recipes, Task (`Taskfile.yml`), and Gradle/Maven (best-effort). Go
+  repos are detected via `go.mod`.
 
 ## [0.1.2] - 2026-08-04
 

@@ -1,5 +1,5 @@
 import pc from "picocolors";
-import type { Finding, Severity } from "./types.js";
+import type { Severity } from "./types.js";
 import type { LintResult } from "./lint.js";
 
 /** Honour NO_COLOR and non-TTY output. */

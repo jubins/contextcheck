@@ -63,10 +63,16 @@ const CARGO_BUILTINS = new Set([
   "new",
 ]);
 
+/** The token immediately after `flag`, or undefined if absent/at the end. */
+function argAfter(tokens: string[], flag: string): string | undefined {
+  const i = tokens.indexOf(flag);
+  return i >= 0 ? tokens[i + 1] : undefined;
+}
+
 export function commandTarget(normalized: string): CommandTarget | undefined {
   const tokens = normalized.split(" ").filter(Boolean);
-  if (tokens.length === 0) return undefined;
-  const runner = tokens[0]!;
+  const runner = tokens[0];
+  if (!runner) return undefined;
 
   if (PM_RUN.has(runner)) {
     // `npm run build` / `pnpm run build`
@@ -99,25 +105,32 @@ export function commandTarget(normalized: string): CommandTarget | undefined {
   }
   // `tox -e X` → environment X.
   if (runner === "tox") {
-    const i = tokens.indexOf("-e");
-    if (i >= 0 && tokens[i + 1]) return { task: tokens[i + 1]!, runner };
+    const env = argAfter(tokens, "-e");
+    if (env) return { task: env, runner };
   }
   // `nox -s X` → session X.
   if (runner === "nox") {
-    const i = tokens.indexOf("-s");
-    if (i >= 0 && tokens[i + 1]) return { task: tokens[i + 1]!, runner };
+    const session = argAfter(tokens, "-s");
+    if (session) return { task: session, runner };
   }
 
   // Cargo: named bins/examples and custom aliases are verifiable.
-  if (runner === "cargo" && tokens[1]) {
-    const bin = tokens.indexOf("--bin");
-    if (bin >= 0 && tokens[bin + 1]) return { task: tokens[bin + 1]!, runner };
-    const ex = tokens.indexOf("--example");
-    if (ex >= 0 && tokens[ex + 1]) return { task: tokens[ex + 1]!, runner };
+  const cargoSub = tokens[1];
+  if (runner === "cargo" && cargoSub) {
+    const bin = argAfter(tokens, "--bin");
+    if (bin) return { task: bin, runner };
+    const example = argAfter(tokens, "--example");
+    if (example) return { task: example, runner };
     // A non-builtin second token is a custom alias (e.g. `cargo xtask`).
-    if (!CARGO_BUILTINS.has(tokens[1])) return { task: tokens[1], runner };
+    if (!CARGO_BUILTINS.has(cargoSub)) return { task: cargoSub, runner };
   }
 
-  // Other runners (go, ...) aren't script-name based; skip.
+  // Gradle: `gradle <task>` / `./gradlew <task>` — first non-flag token.
+  if (runner === "gradle" || runner === "./gradlew" || runner === "gradlew") {
+    const task = tokens.slice(1).find((t) => !t.startsWith("-"));
+    if (task) return { task, runner: "gradle" };
+  }
+
+  // Other runners (go, mvn, ...) aren't reliably script-name based; skip.
   return undefined;
 }

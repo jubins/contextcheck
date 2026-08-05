@@ -6,6 +6,9 @@ import { MakefileResolver } from "./resolve/make.js";
 import { PythonResolver } from "./resolve/python.js";
 import { RustResolver } from "./resolve/rust.js";
 import { GoResolver } from "./resolve/go.js";
+import { JustResolver } from "./resolve/just.js";
+import { TaskResolver } from "./resolve/task.js";
+import { JvmResolver } from "./resolve/jvm.js";
 import { PathResolver } from "./resolve/path.js";
 import type { Resolver, TaskInfo } from "./resolve/types.js";
 import { runChecks, type CheckContext, type RuleConfig } from "./checks/index.js";
@@ -28,6 +31,9 @@ const ALL_RESOLVERS: Resolver[] = [
   new PythonResolver(),
   new RustResolver(),
   new GoResolver(),
+  new JustResolver(),
+  new TaskResolver(),
+  new JvmResolver(),
 ];
 
 /**

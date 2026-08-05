@@ -198,7 +198,7 @@ function collectProsePaths(
     // a descriptive mention ("AGENTS.md and CLAUDE.md style files"), not a
     // claim that the file exists. Require a separator to avoid false
     // positives; real "the file is at X" claims in prose include a path.
-    if (!/[\/\\]/.test(assessment.value)) continue;
+    if (!/[/\\]/.test(assessment.value)) continue;
     out.push({
       kind: "path",
       raw: m[0],

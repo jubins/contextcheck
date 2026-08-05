@@ -1,20 +1,11 @@
-import { readFile, access } from "node:fs/promises";
 import { join } from "node:path";
 import type { Resolver, TaskInfo } from "./types.js";
-
-async function exists(p: string): Promise<boolean> {
-  try {
-    await access(p);
-    return true;
-  } catch {
-    return false;
-  }
-}
+import { pathExists, readTextSafe } from "./fs-utils.js";
 
 /** The module path from a go.mod's `module` directive, or undefined. */
 export function parseGoModule(goMod: string): string | undefined {
   const m = goMod.match(/^\s*module\s+(\S+)/m);
-  return m ? m[1] : undefined;
+  return m?.[1];
 }
 
 /**
@@ -30,12 +21,9 @@ export class GoResolver implements Resolver {
 
   async detect(repoRoot: string): Promise<boolean> {
     const goMod = join(repoRoot, "go.mod");
-    if (!(await exists(goMod))) return false;
-    try {
-      this.modulePath = parseGoModule(await readFile(goMod, "utf8"));
-    } catch {
-      this.modulePath = undefined;
-    }
+    if (!(await pathExists(goMod))) return false;
+    const text = await readTextSafe(goMod);
+    this.modulePath = text ? parseGoModule(text) : undefined;
     return true;
   }
 

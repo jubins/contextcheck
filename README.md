@@ -93,6 +93,9 @@ Command claims are verified against tasks the repo actually defines, across:
 - **Python** — `pyproject.toml` scripts (project/poetry/hatch) and `tox` envs
 - **Rust** — `Cargo.toml` bins/examples and `.cargo/config.toml` aliases
 - **Go** — `go.mod` (module detection; tasks via `Makefile`)
+- **just** — `justfile` recipes
+- **Task** — `Taskfile.yml` tasks
+- **Gradle / Maven** — `build.gradle(.kts)` tasks and `pom.xml` profiles (best-effort)
 
 Path and casing checks are language-agnostic and work in any repo.
 

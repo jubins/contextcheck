@@ -1,23 +1,6 @@
-import { readFile, access } from "node:fs/promises";
 import { join } from "node:path";
 import type { Resolver, TaskInfo } from "./types.js";
-
-async function exists(p: string): Promise<boolean> {
-  try {
-    await access(p);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-async function readFileSafe(p: string): Promise<string | undefined> {
-  try {
-    return await readFile(p, "utf8");
-  } catch {
-    return undefined;
-  }
-}
+import { pathExists, readTextSafe } from "./fs-utils.js";
 
 /**
  * Extract the key names from specific TOML tables without a full TOML parser.
@@ -39,15 +22,15 @@ export function tomlTableKeys(
     const line = rawLine.trim();
     if (line.length === 0 || line.startsWith("#")) continue;
 
-    // Table header?
-    const header = line.match(/^\[([^[\]]+)\]\s*(#.*)?$/);
-    if (header) {
-      inTarget = tableMatcher(header[1]!.trim());
+    // Array-of-tables header `[[...]]` — never a script table we want.
+    if (line.startsWith("[[")) {
+      inTarget = false;
       continue;
     }
-    // Array-of-tables header `[[...]]` — never a script table we want.
-    if (/^\[\[/.test(line)) {
-      inTarget = false;
+    // Table header `[a.b.c]` (single brackets).
+    if (line.startsWith("[") && line.includes("]")) {
+      const table = line.slice(1, line.indexOf("]")).trim();
+      inTarget = tableMatcher(table);
       continue;
     }
 
@@ -55,10 +38,9 @@ export function tomlTableKeys(
 
     // key = value  (key may be bare or quoted)
     const kv = line.match(/^("([^"]+)"|'([^']+)'|[A-Za-z0-9_.-]+)\s*=/);
-    if (kv) {
-      const key = kv[2] ?? kv[3] ?? kv[1]!;
-      keys.push(key);
-    }
+    if (!kv) continue;
+    const key = kv[2] ?? kv[3] ?? kv[1];
+    if (key) keys.push(key);
   }
   return keys;
 }
@@ -76,20 +58,36 @@ export function parsePyprojectScripts(toml: string): string[] {
   return [...names];
 }
 
-/** Environment names from tox.ini `envlist = a, b, c`. */
+/** Environment names from tox.ini `envlist = a, b, c` and [testenv:NAME]. */
 export function parseToxEnvlist(ini: string): string[] {
   const names = new Set<string>();
-  // envlist can span multiple lines; grab the block after `envlist =`.
-  const match = ini.match(/^\s*envlist\s*=(.*(?:\n[ \t]+.*)*)/m);
-  if (match) {
-    for (const part of match[1]!.split(/[\s,]+/)) {
+  const lines = ini.split("\n");
+
+  // envlist may span multiple lines (continued by indentation). Read the value
+  // after `envlist =` plus any following indented lines, without a nested-
+  // quantifier regex.
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i] ?? "";
+    const m = line.match(/^\s*envlist\s*=(.*)$/);
+    if (!m) continue;
+    let value = m[1] ?? "";
+    for (let j = i + 1; j < lines.length; j++) {
+      const cont = lines[j] ?? "";
+      if (/^[ \t]+\S/.test(cont)) value += " " + cont.trim();
+      else break;
+    }
+    for (const part of value.split(/[\s,]+/)) {
       const name = part.trim();
       if (name) names.add(name);
     }
+    break;
   }
-  // Also collect [testenv:NAME] section names.
-  for (const m of ini.matchAll(/^\[testenv:([^\]]+)\]/gm)) {
-    names.add(m[1]!.trim());
+
+  // [testenv:NAME] section names.
+  for (const raw of lines) {
+    const m = raw.match(/^\[testenv:([^\]]+)\]/);
+    const name = m?.[1];
+    if (name) names.add(name.trim());
   }
   return [...names];
 }
@@ -99,22 +97,22 @@ export class PythonResolver implements Resolver {
 
   async detect(repoRoot: string): Promise<boolean> {
     return (
-      (await exists(join(repoRoot, "pyproject.toml"))) ||
-      (await exists(join(repoRoot, "tox.ini")))
+      (await pathExists(join(repoRoot, "pyproject.toml"))) ||
+      (await pathExists(join(repoRoot, "tox.ini")))
     );
   }
 
   async tasks(repoRoot: string): Promise<Map<string, TaskInfo>> {
     const out = new Map<string, TaskInfo>();
 
-    const pyproject = await readFileSafe(join(repoRoot, "pyproject.toml"));
+    const pyproject = await readTextSafe(join(repoRoot, "pyproject.toml"));
     if (pyproject) {
       for (const name of parsePyprojectScripts(pyproject)) {
         out.set(name, { name, source: this.name });
       }
     }
 
-    const tox = await readFileSafe(join(repoRoot, "tox.ini"));
+    const tox = await readTextSafe(join(repoRoot, "tox.ini"));
     if (tox) {
       for (const name of parseToxEnvlist(tox)) {
         if (!out.has(name)) out.set(name, { name, source: this.name });
