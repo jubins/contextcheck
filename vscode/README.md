@@ -44,14 +44,22 @@ your agent confidently runs commands that no longer exist.
 ## Features
 
 - **Stale command detection** — a command like `npm run build` that no longer
-  exists in `package.json`, with a *"did you mean `build:prod`?"* suggestion.
-- **Dead path detection** — a referenced file or directory that isn't there.
-- **Case-mismatch detection** — a path that resolves on macOS but breaks
-  case-sensitive Linux CI, with a one-click casing fix.
+  exists, with a *"did you mean `build:prod`?"* suggestion. Verified across
+  **npm, Make, Python, Rust, just, Task, and Gradle/Maven** — not just npm.
+- **Dead path & case-mismatch detection** — referenced files that aren't there,
+  or that resolve on macOS but break case-sensitive Linux CI (one-click fix).
+- **More checks** — wrong package manager, tools the repo replaced (e.g. Jest →
+  Vitest), tasks you forgot to document, oversized files, and **git staleness**
+  (how far the file has drifted from the code).
 - **Quick fixes** — apply the suggested fix from the editor lightbulb or the sidebar.
 - **Dedicated sidebar** — an Activity Bar view grouping every finding by file.
 - **Status bar count** — the active file's issue count at a glance.
 - **Deterministic & explainable** — every finding maps to a rule you can read. No LLM guessing.
+
+> Prefer CI? The same engine ships as a
+> [CLI](https://www.npmjs.com/package/contextcheck-cli) and a
+> [GitHub Action](https://github.com/jubins/contextcheck/tree/master/action)
+> that comments on pull requests.
 
 ---
 
@@ -110,6 +118,7 @@ Once everything is fixed, the view is clean:
 | `tool-mismatch` | Warning | The context file names a tool (e.g. Jest) while the repo uses a competitor (e.g. Vitest). |
 | `oversized` | Warning | The context file exceeds 150 lines; reports the largest sections. |
 | `staleness` | Info / Warning | Many commits (esp. manifest-touching) have landed since the context file changed. Info above 10, warning above 30. |
+| `cross-file-contradiction` | Error | Two context files in the same directory document the same task differently. |
 
 ---
 

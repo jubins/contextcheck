@@ -1,6 +1,13 @@
 import { readFile } from "node:fs/promises";
+import { join, dirname } from "node:path";
 import type { Finding } from "./types.js";
 import { extractClaims } from "./extract/index.js";
+import { pathExists as exists } from "./resolve/fs-utils.js";
+import { findAllContextFiles } from "./discover.js";
+import {
+  checkCrossFileContradictions,
+  type ContextFileInput,
+} from "./checks/cross-file.js";
 import { NpmFamilyResolver, detectPackageManager } from "./resolve/npm.js";
 import { detectTools } from "./resolve/tools.js";
 import { MakefileResolver } from "./resolve/make.js";
@@ -142,4 +149,70 @@ export async function lintFile(
     staleness,
   };
   return lintSource(source, repoRoot, filePath, merged);
+}
+
+const SCOPE_MARKERS = [
+  "package.json",
+  "pyproject.toml",
+  "Cargo.toml",
+  "go.mod",
+  "Makefile",
+];
+
+/**
+ * The nearest ancestor directory of `fileDir` (bounded by `workspaceRoot`)
+ * that contains a manifest — the scope a nested context file resolves against.
+ * Falls back to `workspaceRoot`.
+ */
+async function nearestScope(
+  fileDir: string,
+  workspaceRoot: string,
+): Promise<string> {
+  let dir = fileDir;
+  for (;;) {
+    for (const marker of SCOPE_MARKERS) {
+      if (await exists(join(dir, marker))) return dir;
+    }
+    if (dir === workspaceRoot) break;
+    const parent = dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return workspaceRoot;
+}
+
+/**
+ * Lint every context file under `workspaceRoot`. Each nested file resolves its
+ * claims against the nearest manifest scope, and sibling files in the same
+ * directory are checked for contradictions (`cross-file-contradiction`).
+ */
+export async function lintWorkspace(
+  workspaceRoot: string,
+  options: LintOptions = {},
+): Promise<LintResult[]> {
+  const files = await findAllContextFiles(workspaceRoot);
+  const inputs: ContextFileInput[] = [];
+  const results: LintResult[] = [];
+
+  for (const file of files) {
+    const scope = await nearestScope(dirname(file), workspaceRoot);
+    const result = await lintFile(file, scope, options);
+    results.push(result);
+    inputs.push({ file, source: await readFile(file, "utf8") });
+  }
+
+  // Cross-file contradictions, merged into the owning file's findings.
+  if (options.rules?.["cross-file-contradiction"] !== false) {
+    const crossByFile = checkCrossFileContradictions(inputs);
+    for (const result of results) {
+      const extra = crossByFile.get(result.file);
+      if (extra) {
+        result.findings = [...result.findings, ...extra].sort(
+          (a, b) => a.line - b.line || a.column - b.column,
+        );
+      }
+    }
+  }
+
+  return results;
 }

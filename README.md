@@ -60,10 +60,19 @@ AGENTS.md — 2 issues
 
 | Flag | Description |
 |---|---|
+| `--recursive`, `-r` | Lint every nested context file (monorepo mode) and check for cross-file contradictions. |
 | `--format <human\|json\|sarif>` | Output format. Default `human`. `sarif` for GitHub code scanning. |
 | `--severity-threshold <error\|warn\|info>` | Severity that causes a non-zero exit. Default `error`. |
 | `--only <rules>` | Comma-separated rule ids to run exclusively. |
 | `--ignore <rules>` | Comma-separated rule ids to skip. |
+
+### Monorepos
+
+`--recursive` discovers every `AGENTS.md` / `CLAUDE.md` in the tree. Each nested
+file resolves its claims against the **nearest** manifest (so
+`packages/api/AGENTS.md` checks `packages/api/package.json` first), and sibling
+files that document the same task differently are flagged. The bridge pattern —
+a `CLAUDE.md` that just contains `@AGENTS.md` — is never flagged.
 
 ### Configuration file
 
@@ -104,6 +113,7 @@ drops straight into CI:
 | `tool-mismatch` | Warning | The context file names a tool (e.g. Jest) while the repo uses a competitor (e.g. Vitest). |
 | `oversized` | Warning | The context file exceeds 150 lines; reports the largest sections. |
 | `staleness` | Info / Warning | Many commits (esp. manifest-touching) have landed since the context file changed. Info above 10, warning above 30. |
+| `cross-file-contradiction` | Error | Two context files in the same directory document the same task with different commands. |
 
 ## Supported ecosystems
 
@@ -142,7 +152,8 @@ jobs:
       - uses: jubins/contextcheck/action@v1
 ```
 
-Warn-only by default so it never blocks a merge. See [`action/`](action/) for options.
+Warn-only by default so it never blocks a merge. It can also upload **SARIF**
+so findings appear inline in the Files Changed tab. See [`action/`](action/) for options.
 
 ## VS Code extension
 
