@@ -101,3 +101,43 @@ export const KNOWN_FILENAMES = new Set<string>([
   "AGENTS.md",
   "CLAUDE.md",
 ]);
+
+/**
+ * Curated developer tools mapped to a category. Tools sharing a category are
+ * alternatives (e.g. jest vs vitest), which lets `tool-mismatch` flag a context
+ * file that names one while the repo actually uses a competitor.
+ */
+export const TOOL_CATEGORIES = new Map<string, string>([
+  // JS test runners
+  ["jest", "js-test"],
+  ["vitest", "js-test"],
+  ["mocha", "js-test"],
+  ["jasmine", "js-test"],
+  ["ava", "js-test"],
+  // JS linters / formatters
+  ["eslint", "js-lint"],
+  ["biome", "js-lint"],
+  ["prettier", "js-format"],
+  // JS bundlers
+  ["webpack", "js-bundler"],
+  ["vite", "js-bundler"],
+  ["rollup", "js-bundler"],
+  ["esbuild", "js-bundler"],
+  ["parcel", "js-bundler"],
+  ["turbopack", "js-bundler"],
+  // Python test / lint / format
+  ["pytest", "py-test"],
+  ["unittest", "py-test"],
+  ["nose", "py-test"],
+  ["ruff", "py-lint"],
+  ["flake8", "py-lint"],
+  ["pylint", "py-lint"],
+  ["black", "py-format"],
+  ["yapf", "py-format"],
+  ["isort", "py-format"],
+  ["mypy", "py-typecheck"],
+  ["pyright", "py-typecheck"],
+]);
+
+/** All tool names we recognize, lowercased. */
+export const KNOWN_TOOLS = new Set<string>(TOOL_CATEGORIES.keys());

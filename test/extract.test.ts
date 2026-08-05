@@ -226,3 +226,23 @@ describe("extractClaims", () => {
     expect(cmds[1]!.column).toBe(11);
   });
 });
+
+describe("tool extraction", () => {
+  it("extracts an inline-code tool at high confidence", () => {
+    const tools = of(extractClaims("We use `jest` here."), "tool");
+    expect(tools).toHaveLength(1);
+    expect(tools[0]!.value).toBe("jest");
+    expect(tools[0]!.confidence).toBe("high");
+  });
+
+  it("extracts a prose tool mention at low confidence", () => {
+    const tools = of(extractClaims("The project uses Vitest for tests."), "tool");
+    expect(tools.map((t) => t.value)).toContain("vitest");
+    expect(tools[0]!.confidence).toBe("low");
+  });
+
+  it("ignores unknown words", () => {
+    const tools = of(extractClaims("We use `frobnicator` here."), "tool");
+    expect(tools).toHaveLength(0);
+  });
+});

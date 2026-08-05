@@ -13,6 +13,10 @@ now aligned at v1.
   lockfile indicates pnpm/yarn/bun.
 - **`undocumented-task`** rule (info) — flags important tasks the repo defines
   (`test`/`build`/`lint`/`typecheck`/`dev`) that the context file never mentions.
+- **`tool-mismatch`** rule (warn) — the context file names a tool (e.g. Jest)
+  while the repo's manifests show a competitor (e.g. Vitest).
+- **`oversized`** rule (warn) — the context file exceeds 150 lines; the message
+  lists the three largest sections.
 - **GitHub Action** (`jubins/contextcheck/action@v1`) — lints context files on
   pull requests, posts a single self-updating comment, and warns when a PR
   changes a manifest but no context file.
