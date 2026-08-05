@@ -1,15 +1,6 @@
-import { readFile, access } from "node:fs/promises";
 import { join } from "node:path";
 import type { Resolver, TaskInfo } from "./types.js";
-
-async function exists(p: string): Promise<boolean> {
-  try {
-    await access(p);
-    return true;
-  } catch {
-    return false;
-  }
-}
+import { pathExists, readTextSafe } from "./fs-utils.js";
 
 /** Makefile names we look for, in order of preference. */
 const MAKEFILE_NAMES = ["Makefile", "makefile", "GNUmakefile"];
@@ -17,12 +8,8 @@ const MAKEFILE_NAMES = ["Makefile", "makefile", "GNUmakefile"];
 async function readMakefile(repoRoot: string): Promise<string | undefined> {
   for (const name of MAKEFILE_NAMES) {
     const p = join(repoRoot, name);
-    if (await exists(p)) {
-      try {
-        return await readFile(p, "utf8");
-      } catch {
-        return undefined;
-      }
+    if (await pathExists(p)) {
+      return readTextSafe(p);
     }
   }
   return undefined;
@@ -52,15 +39,16 @@ export function parseMakefileTargets(text: string): string[] {
     // Collect names from `.PHONY: a b c` declarations.
     const phony = line.match(/^\.PHONY\s*:(.*)$/);
     if (phony) {
-      for (const name of phony[1]!.trim().split(/\s+/)) {
+      const rest = phony[1] ?? "";
+      for (const name of rest.trim().split(/\s+/)) {
         if (name) targets.add(name);
       }
       continue;
     }
 
     const m = line.match(TARGET_RE);
-    if (!m) continue;
-    const name = m[1]!;
+    const name = m?.[1];
+    if (!name) continue;
     // Skip pattern rules and dot-targets (e.g. .DEFAULT, .SUFFIXES).
     if (name.includes("%") || name.startsWith(".")) continue;
     targets.add(name);

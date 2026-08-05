@@ -1,15 +1,6 @@
-import { readFile, access } from "node:fs/promises";
 import { join } from "node:path";
 import type { Resolver, TaskInfo, PackageManager } from "./types.js";
-
-async function exists(p: string): Promise<boolean> {
-  try {
-    await access(p);
-    return true;
-  } catch {
-    return false;
-  }
-}
+import { pathExists, readTextSafe } from "./fs-utils.js";
 
 /**
  * Detect the package manager a repo actually uses from its lockfile. Lets us
@@ -21,10 +12,10 @@ export async function detectPackageManager(
 ): Promise<PackageManager | undefined> {
   // Order matters only for the rare repo with multiple lockfiles; prefer the
   // more specific tools over npm.
-  if (await exists(join(repoRoot, "bun.lockb"))) return "bun";
-  if (await exists(join(repoRoot, "pnpm-lock.yaml"))) return "pnpm";
-  if (await exists(join(repoRoot, "yarn.lock"))) return "yarn";
-  if (await exists(join(repoRoot, "package-lock.json"))) return "npm";
+  if (await pathExists(join(repoRoot, "bun.lockb"))) return "bun";
+  if (await pathExists(join(repoRoot, "pnpm-lock.yaml"))) return "pnpm";
+  if (await pathExists(join(repoRoot, "yarn.lock"))) return "yarn";
+  if (await pathExists(join(repoRoot, "package-lock.json"))) return "npm";
   return undefined;
 }
 
@@ -35,8 +26,9 @@ interface PackageJson {
 async function readPackageJson(
   repoRoot: string,
 ): Promise<PackageJson | undefined> {
+  const raw = await readTextSafe(join(repoRoot, "package.json"));
+  if (!raw) return undefined;
   try {
-    const raw = await readFile(join(repoRoot, "package.json"), "utf8");
     return JSON.parse(raw) as PackageJson;
   } catch {
     return undefined;
@@ -47,7 +39,7 @@ export class NpmFamilyResolver implements Resolver {
   readonly name = "npm-family";
 
   async detect(repoRoot: string): Promise<boolean> {
-    return exists(join(repoRoot, "package.json"));
+    return pathExists(join(repoRoot, "package.json"));
   }
 
   async tasks(repoRoot: string): Promise<Map<string, TaskInfo>> {

@@ -1,0 +1,17 @@
+set shell := ["bash", "-c"]
+
+version := "1.0"
+
+# Build the project
+build:
+    cargo build
+
+test:
+    cargo test
+
+deploy env:
+    ./deploy.sh {{env}}
+
+[private]
+_helper:
+    echo internal
