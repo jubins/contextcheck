@@ -13,13 +13,13 @@ const URL_RE = /^[a-z][a-z0-9+.-]*:\/\//i;
 const SCOPED_PKG_RE = /^@[a-z0-9-~][a-z0-9-._~]*\/[a-z0-9-._~]+$/i;
 const GLOB_CHARS = /[*?[\]{}]|\*\*/;
 /** A path separator that is not part of a URL scheme. */
-const HAS_SEPARATOR = /[\/\\]/;
+const HAS_SEPARATOR = /[/\\]/;
 const TRAILING_PUNCT = /[.,;:!?)\]'"]+$/;
 const LEADING_PUNCT = /^[('"]+/;
 
 /** Extract the file extension (without dot), or "" if none. */
 function extensionOf(token: string): string {
-  const base = token.split(/[\/\\]/).pop() ?? token;
+  const base = token.split(/[/\\]/).pop() ?? token;
   const dot = base.lastIndexOf(".");
   if (dot <= 0 || dot === base.length - 1) return "";
   return base.slice(dot + 1).toLowerCase();
@@ -43,7 +43,7 @@ export function assessPath(rawToken: string): PathAssessment {
   const hasGlob = GLOB_CHARS.test(value);
   const hasSep = HAS_SEPARATOR.test(value);
   const ext = extensionOf(value);
-  const known = KNOWN_FILENAMES.has(value.split(/[\/\\]/).pop() ?? value);
+  const known = KNOWN_FILENAMES.has(value.split(/[/\\]/).pop() ?? value);
 
   if (hasGlob) {
     // A glob still needs to look pathy (separator or known extension) to count.

@@ -16,7 +16,7 @@ export interface SplitCommand {
  */
 export function stripPrompt(line: string): { text: string; offset: number } {
   const trimmedStart = line.length - line.trimStart().length;
-  let rest = line.slice(trimmedStart);
+  const rest = line.slice(trimmedStart);
   for (const prefix of SHELL_PROMPT_PREFIXES) {
     if (rest === prefix || rest.startsWith(prefix + " ")) {
       const consumed = rest.startsWith(prefix + " ")
