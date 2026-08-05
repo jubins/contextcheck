@@ -40,6 +40,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # Push the release bump/tag as the user behind GH_PAT so the push is
+          # attributed to a ruleset bypass actor (the default GITHUB_TOKEN /
+          # Actions bot is blocked by the "changes via PR" branch rule).
+          token: ${{ secrets.GH_PAT }}
 
       - name: Configure git author
         run: |
