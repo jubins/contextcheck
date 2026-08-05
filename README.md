@@ -61,6 +61,7 @@ AGENTS.md — 2 issues
 | Flag | Description |
 |---|---|
 | `--recursive`, `-r` | Lint every nested context file (monorepo mode) and check for cross-file contradictions. |
+| `--explain` | Propose LLM fix diffs for the findings (opt-in; needs `ANTHROPIC_API_KEY`). Never edits files. |
 | `--format <human\|json\|sarif>` | Output format. Default `human`. `sarif` for GitHub code scanning. |
 | `--severity-threshold <error\|warn\|info>` | Severity that causes a non-zero exit. Default `error`. |
 | `--only <rules>` | Comma-separated rule ids to run exclusively. |
@@ -99,6 +100,18 @@ drops straight into CI:
 
 ```yaml
 - run: npx contextcheck-cli --severity-threshold error
+```
+
+### Optional LLM fixes (`--explain`)
+
+Off by default. With `--explain` and an `ANTHROPIC_API_KEY` in the environment
+(bring your own key), Context Check asks an LLM to propose a **diff** that fixes
+*only the findings it already reported* — never a freeform review. The diff is
+printed for you to apply; `--explain` never edits files, and the deterministic
+linter needs no key or network.
+
+```bash
+ANTHROPIC_API_KEY=sk-... ctxcheck --explain
 ```
 
 ## What it checks
