@@ -9,7 +9,7 @@ import type {
   PhrasingContent,
 } from "mdast";
 import type { Claim } from "../types.js";
-import { SHELL_FENCE_LANGS } from "./patterns.js";
+import { SHELL_FENCE_LANGS, KNOWN_TOOLS } from "./patterns.js";
 import {
   stripPrompt,
   splitChain,
@@ -118,8 +118,20 @@ function extractFromInlineCode(node: InlineCode, out: Claim[]): void {
     return;
   }
 
-  // Single-token inline code may be a path reference.
+  // Single-token inline code may be a tool name or a path reference.
   if (!/\s/.test(value)) {
+    if (KNOWN_TOOLS.has(value.toLowerCase())) {
+      out.push({
+        kind: "tool",
+        raw: value,
+        value: value.toLowerCase(),
+        line,
+        column,
+        context: "inline-code",
+        confidence: "high",
+      });
+      return;
+    }
     const assessment = assessPath(value);
     if (assessment.isPath) {
       out.push({
@@ -192,6 +204,20 @@ function collectProsePaths(
   const tokenRe = /\S+/g;
   let m: RegExpExecArray | null;
   while ((m = tokenRe.exec(text)) !== null) {
+    // Prose tool mention (low confidence). Strip surrounding punctuation.
+    const bare = m[0].replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, "").toLowerCase();
+    if (KNOWN_TOOLS.has(bare)) {
+      out.push({
+        kind: "tool",
+        raw: m[0],
+        value: bare,
+        line,
+        column: startCol + m.index,
+        context,
+        confidence: "low",
+      });
+      continue;
+    }
     const assessment = assessPath(m[0]);
     if (!assessment.isPath) continue;
     // In free prose a bare filename (no directory separator) is almost always

@@ -107,6 +107,8 @@ Once everything is fixed, the view is clean:
 | `case-mismatch-path` | Error | A path exists but with different casing — breaks case-sensitive CI. |
 | `wrong-package-manager` | Info | A command uses `npm` while the repo's lockfile is pnpm/yarn/bun. |
 | `undocumented-task` | Info | The repo defines an important task (`test`/`build`/`lint`/`typecheck`/`dev`) the context file never mentions. |
+| `tool-mismatch` | Warning | The context file names a tool (e.g. Jest) while the repo uses a competitor (e.g. Vitest). |
+| `oversized` | Warning | The context file exceeds 150 lines; reports the largest sections. |
 
 ---
 

@@ -29,6 +29,8 @@ function buildRuleConfig(opts: CliOptions): RuleConfig | undefined {
       "case-mismatch-path",
       "wrong-package-manager",
       "undocumented-task",
+      "tool-mismatch",
+      "oversized",
     ];
     const cfg: RuleConfig = {};
     for (const rule of all) cfg[rule] = keep.has(rule);

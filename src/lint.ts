@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import type { Finding } from "./types.js";
 import { extractClaims } from "./extract/index.js";
 import { NpmFamilyResolver, detectPackageManager } from "./resolve/npm.js";
+import { detectTools } from "./resolve/tools.js";
 import { MakefileResolver } from "./resolve/make.js";
 import { PythonResolver } from "./resolve/python.js";
 import { RustResolver } from "./resolve/rust.js";
@@ -51,12 +52,14 @@ export async function buildContext(repoRoot: string): Promise<CheckContext> {
     }
   }
   const packageManager = await detectPackageManager(repoRoot);
+  const tools = await detectTools(repoRoot);
   return {
     repoRoot,
     resolvers,
     tasks,
     pathResolver: new PathResolver(repoRoot),
     packageManager,
+    tools,
   };
 }
 
@@ -73,7 +76,8 @@ export async function lintSource(
 ): Promise<LintResult> {
   const claims = extractClaims(source);
   const ctx = await buildContext(repoRoot);
-  const findings = await runChecks(claims, ctx, options.rules);
+  // `source` enables whole-file checks (oversized) without re-reading disk.
+  const findings = await runChecks(claims, { ...ctx, source }, options.rules);
   return { file, findings };
 }
 

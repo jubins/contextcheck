@@ -3,6 +3,7 @@ import type { Resolver, TaskInfo, PackageManager } from "../resolve/types.js";
 import { PathResolver } from "../resolve/path.js";
 import { closestMatch } from "./levenshtein.js";
 import { commandTarget } from "./command-target.js";
+import { TOOL_CATEGORIES } from "../extract/patterns.js";
 
 /** Everything a checker needs about the repo, gathered once. */
 export interface CheckContext {
@@ -14,6 +15,10 @@ export interface CheckContext {
   pathResolver: PathResolver;
   /** Package manager detected from the lockfile, if any. */
   packageManager?: PackageManager;
+  /** Known dev tools detected in the repo's manifests (lowercased). */
+  tools?: Set<string>;
+  /** Raw source of the context file, for whole-file checks (oversized). */
+  source?: string;
 }
 
 /** Which rules are enabled. Absent = enabled. */
@@ -168,6 +173,99 @@ export function checkUndocumentedTask(
   return findings;
 }
 
+/**
+ * The `tool-mismatch` checker: the context file names a tool while the repo's
+ * manifests show a competing tool in the same category (and not the named one).
+ * Warn level.
+ */
+export function checkToolMismatch(
+  claims: Claim[],
+  ctx: CheckContext,
+): Finding[] {
+  const present = ctx.tools;
+  if (!present || present.size === 0) return [];
+  const findings: Finding[] = [];
+  for (const claim of claims) {
+    if (claim.kind !== "tool") continue;
+    const named = claim.value;
+    if (present.has(named)) continue; // the claimed tool is actually present
+    const category = TOOL_CATEGORIES[named];
+    if (!category) continue;
+    // Is a competing tool in the same category present instead?
+    const competitor = [...present].find(
+      (t) => TOOL_CATEGORIES[t] === category && t !== named,
+    );
+    if (!competitor) continue;
+    findings.push({
+      rule: "tool-mismatch",
+      severity: "warn",
+      message: `claims \`${named}\` but the repo uses \`${competitor}\``,
+      line: claim.line,
+      column: claim.column,
+      suggestion: `update the docs to reference \`${competitor}\``,
+      fixable: false,
+    });
+  }
+  return findings;
+}
+
+/** Report a section (heading text) and its line span for the oversized check. */
+interface Section {
+  title: string;
+  lines: number;
+}
+
+/** Split markdown source into sections by top-level (## / #) headings. */
+function sectionSizes(source: string): Section[] {
+  const lines = source.split("\n");
+  const sections: Section[] = [];
+  let current: Section | null = null;
+  for (const line of lines) {
+    const heading = line.match(/^#{1,3}\s+(.*)$/);
+    if (heading) {
+      if (current) sections.push(current);
+      current = { title: heading[1]?.trim() ?? "", lines: 0 };
+    } else if (current) {
+      current.lines++;
+    }
+  }
+  if (current) sections.push(current);
+  return sections;
+}
+
+/**
+ * The `oversized` checker: the context file is over the line threshold. Reports
+ * the total plus the three largest sections so the message is actionable. Warn.
+ */
+export function checkOversized(
+  source: string | undefined,
+  threshold = 150,
+): Finding[] {
+  if (!source) return [];
+  const total = source.split("\n").length;
+  if (total <= threshold) return [];
+
+  const top = sectionSizes(source)
+    .sort((a, b) => b.lines - a.lines)
+    .slice(0, 3)
+    .filter((s) => s.lines > 0);
+  const detail = top.length
+    ? " Largest sections: " +
+      top.map((s) => `"${s.title}" (${s.lines} lines)`).join(", ") + "."
+    : "";
+
+  return [
+    {
+      rule: "oversized",
+      severity: "warn",
+      message: `context file is ${total} lines (threshold ${threshold}).${detail}`,
+      line: 1,
+      column: 1,
+      fixable: false,
+    },
+  ];
+}
+
 /** Run all enabled checkers and return findings sorted by line then column. */
 export async function runChecks(
   claims: Claim[],
@@ -189,6 +287,12 @@ export async function runChecks(
   }
   if (enabled(config, "undocumented-task")) {
     findings.push(...checkUndocumentedTask(claims, ctx));
+  }
+  if (enabled(config, "tool-mismatch")) {
+    findings.push(...checkToolMismatch(claims, ctx));
+  }
+  if (enabled(config, "oversized")) {
+    findings.push(...checkOversized(ctx.source));
   }
   findings.sort((a, b) => a.line - b.line || a.column - b.column);
   return findings;

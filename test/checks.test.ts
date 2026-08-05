@@ -194,3 +194,50 @@ describe("rule config", () => {
     expect(res.findings.some((x) => x.rule === "undocumented-task")).toBe(false);
   });
 });
+
+describe("tool-mismatch", () => {
+  it("positive: flags a claimed tool the repo replaced with a competitor", async () => {
+    // npm-repo devDeps include vitest; the file claims jest.
+    const f = await lint("We use `jest` for testing.");
+    const tm = f.find((x) => x.rule === "tool-mismatch");
+    expect(tm).toBeDefined();
+    expect(tm!.severity).toBe("warn");
+    expect(tm!.message).toContain("jest");
+    expect(tm!.message).toContain("vitest");
+  });
+
+  it("negative: does not flag a tool that is actually present", async () => {
+    const f = await lint("We use `vitest` for testing.");
+    expect(f.some((x) => x.rule === "tool-mismatch")).toBe(false);
+  });
+
+  it("negative: does not flag when no competitor is present", async () => {
+    // prettier has no competing tool in npm-repo's deps.
+    const f = await lint("Format with `prettier`.");
+    expect(f.some((x) => x.rule === "tool-mismatch")).toBe(false);
+  });
+});
+
+describe("oversized", () => {
+  const bigFile = (() => {
+    const lines = ["# Title", "## Architecture"];
+    for (let i = 0; i < 90; i++) lines.push(`arch ${i}`);
+    lines.push("## Setup");
+    for (let i = 0; i < 70; i++) lines.push(`setup ${i}`);
+    return lines.join("\n");
+  })();
+
+  it("positive: flags an over-threshold file with largest sections", async () => {
+    const res = await lintSource(bigFile, fx("npm-repo"), "AGENTS.md");
+    const o = res.findings.find((x) => x.rule === "oversized");
+    expect(o).toBeDefined();
+    expect(o!.severity).toBe("warn");
+    expect(o!.message).toContain("threshold 150");
+    expect(o!.message).toContain("Architecture");
+  });
+
+  it("negative: does not flag a short file", async () => {
+    const res = await lintSource("# Small\n\nJust a few lines.", fx("npm-repo"), "AGENTS.md");
+    expect(res.findings.some((x) => x.rule === "oversized")).toBe(false);
+  });
+});
