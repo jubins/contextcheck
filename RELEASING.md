@@ -67,23 +67,19 @@ The pipeline is safe to retry:
 So after a partial failure, fix the cause (e.g. an expired `VSCE_PAT`) and
 re-run the workflow on the same tag — it completes only the missing pieces.
 
-## The GitHub Action's `@v1` tag
+## The GitHub Action's moving major tag
 
-External users reference the Action as `jubins/contextcheck/action@v1` — a
-*moving* tag that always points at the latest `1.x` release, so they get patches
-without pinning. The release workflow moves it automatically (step 5 above).
+External users reference the Action by its **major** version — currently
+`jubins/contextcheck/action@v0` — a *moving* tag that always points at the
+latest release in that major line, so they get patches without pinning. The
+release workflow moves it automatically (step 5 above), deriving the tag from
+the package version: `0.1.5` keeps `v0` current, `1.x` would keep `v1` current.
 
-The **first** `v1` must be created by hand, once `action/` is on `master`:
-
-```bash
-git checkout master && git pull
-git tag v1            # points at the current release commit
-git push origin v1
-```
-
-After that, every `npm run release` keeps `v1` current. When you ship a
-breaking change to the Action, bump to a new major (`v2`) and update the docs'
-`@v1` references.
+Because the tag tracks the major version, the docs must reference the major we
+are actually shipping. While the packages are on `0.x`, every example uses
+`@v0`. When you cut `1.0.0`, the workflow starts publishing a `v1` tag — at that
+point update the `@v0` references in `README.md` and `action/README.md` to
+`@v1`. Same again for any future major.
 
 ## Before the first automated release
 

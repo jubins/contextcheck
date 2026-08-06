@@ -31,18 +31,18 @@ npm install -g contextcheck-cli
 npx contextcheck-cli
 ```
 
-The package installs two identical binaries: `ctxcheck` and `contextcheck`.
+Installs the `contextcheck` command (`ctxcheck` also works as a short alias).
 
 ## Usage
 
 Run it from the root of a repo that has an `AGENTS.md` or `CLAUDE.md`:
 
 ```bash
-ctxcheck                       # check the current directory
-ctxcheck path/to/dir           # check a specific directory
-ctxcheck --format json         # machine-readable output
-ctxcheck --ignore dead-path    # skip a rule
-ctxcheck --only stale-command  # run only these rules
+contextcheck                       # check the current directory
+contextcheck path/to/dir           # check a specific directory
+contextcheck --format json         # machine-readable output
+contextcheck --ignore dead-path    # skip a rule
+contextcheck --only stale-command  # run only these rules
 ```
 
 Example output:
@@ -95,7 +95,7 @@ CLI flags (`--only` / `--ignore`) take precedence over the config file.
 
 ### Exit codes
 
-`ctxcheck` exits non-zero when any finding meets the severity threshold, so it
+`contextcheck` exits non-zero when any finding meets the severity threshold, so it
 drops straight into CI:
 
 ```yaml
@@ -111,7 +111,7 @@ printed for you to apply; `--explain` never edits files, and the deterministic
 linter needs no key or network.
 
 ```bash
-ANTHROPIC_API_KEY=sk-... ctxcheck --explain
+ANTHROPIC_API_KEY=sk-... contextcheck --explain
 ```
 
 ## What it checks
@@ -162,7 +162,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
-      - uses: jubins/contextcheck/action@v1
+      - uses: jubins/contextcheck/action@v0
 ```
 
 Warn-only by default so it never blocks a merge. It can also upload **SARIF**

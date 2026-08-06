@@ -122,7 +122,7 @@ async function runExplain(results: LintResult[]): Promise<void> {
 
 const program = new Command();
 program
-  .name("ctxcheck")
+  .name("contextcheck")
   .description(
     "Lint AI agent context files (AGENTS.md, CLAUDE.md) against the repository.",
   )
