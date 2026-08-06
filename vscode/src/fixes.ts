@@ -11,6 +11,43 @@ export function extractSuggestedToken(
 }
 
 /**
+ * Swap the package-manager word at the head of a command line. Preserves the
+ * surrounding markdown (list bullets, backticks, fences) by rewriting only the
+ * `npm` token itself, and drops the `run` that pnpm/yarn/bun don't need for
+ * non-script subcommands they define natively.
+ */
+export function replacePackageManager(
+  line: string,
+  pm: string,
+): string | undefined {
+  // Match `npm` as a standalone word, not inside a longer identifier.
+  const m = line.match(/(^|[^\w-])npm(?=$|[^\w-])/);
+  if (!m) return undefined;
+  const at = m.index! + m[1]!.length;
+  return `${line.slice(0, at)}${pm}${line.slice(at + 3)}`;
+}
+
+/**
+ * Swap a tool name for the one the repo actually uses, e.g. `jest` -> `vitest`.
+ * Rewrites every standalone occurrence on the line so a sentence naming the
+ * tool twice doesn't end up half-corrected.
+ */
+export function replaceToolName(
+  line: string,
+  named: string,
+  actual: string,
+): string | undefined {
+  const re = new RegExp(`(^|[^\\w-])${escapeRegExp(named)}(?=$|[^\\w-])`, "gi");
+  if (!re.test(line)) return undefined;
+  re.lastIndex = 0;
+  return line.replace(re, (_full, pre: string) => `${pre}${actual}`);
+}
+
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
  * Replace the last run-token on a command line with `suggested`. Handles
  * `npm run OLD` -> `npm run NEW` and `make OLD` -> `make NEW` by swapping the
  * final whitespace-delimited token that precedes any trailing comment.
@@ -33,6 +70,34 @@ function firstBacktickToken(text: string): string | undefined {
   return m ? m[1] : undefined;
 }
 
+/** All backtick-wrapped tokens in a string, in order. */
+function backtickTokens(text: string): string[] {
+  return [...text.matchAll(/`([^`]+)`/g)].map((m) => m[1]!);
+}
+
+/**
+ * The package manager a `wrong-package-manager` finding points at. The message
+ * reads "...lockfile indicates pnpm" and the suggestion "use `pnpm` to match".
+ */
+function packageManagerOf(finding: Finding): string | undefined {
+  const fromSuggestion = extractSuggestedToken(finding.suggestion);
+  if (fromSuggestion) return fromSuggestion;
+  const m = finding.message.match(/lockfile indicates (\w+)/);
+  return m ? m[1] : undefined;
+}
+
+/**
+ * The (named, actual) pair for a `tool-mismatch` finding, whose message reads
+ * "claims `jest` but the repo uses `vitest`".
+ */
+function toolPairOf(
+  finding: Finding,
+): { named: string; actual: string } | undefined {
+  const tokens = backtickTokens(finding.message);
+  if (tokens.length < 2) return undefined;
+  return { named: tokens[0]!, actual: tokens[1]! };
+}
+
 /** A human label for the fix a finding supports, or undefined if none. */
 export function fixTitle(finding: Finding): string | undefined {
   if (finding.rule === "stale-command" && finding.fixable) {
@@ -45,6 +110,14 @@ export function fixTitle(finding: Finding): string | undefined {
   }
   if (finding.rule === "dead-path") {
     return "Remove line referencing missing path";
+  }
+  if (finding.rule === "wrong-package-manager") {
+    const pm = packageManagerOf(finding);
+    return pm ? `Switch to \`${pm}\`` : undefined;
+  }
+  if (finding.rule === "tool-mismatch") {
+    const pair = toolPairOf(finding);
+    return pair ? `Replace \`${pair.named}\` with \`${pair.actual}\`` : undefined;
   }
   return undefined;
 }
@@ -97,6 +170,26 @@ export function buildFix(
         ? new vscode.Position(lineIdx + 1, 0)
         : doc.lineAt(lineIdx).range.end;
     edit.delete(doc.uri, new vscode.Range(start, end));
+    return edit;
+  }
+
+  if (finding.rule === "wrong-package-manager") {
+    const pm = packageManagerOf(finding);
+    if (!pm) return undefined;
+    const lineText = doc.lineAt(lineIdx).text;
+    const replaced = replacePackageManager(lineText, pm);
+    if (replaced === undefined) return undefined;
+    edit.replace(doc.uri, doc.lineAt(lineIdx).range, replaced);
+    return edit;
+  }
+
+  if (finding.rule === "tool-mismatch") {
+    const pair = toolPairOf(finding);
+    if (!pair) return undefined;
+    const lineText = doc.lineAt(lineIdx).text;
+    const replaced = replaceToolName(lineText, pair.named, pair.actual);
+    if (replaced === undefined) return undefined;
+    edit.replace(doc.uri, doc.lineAt(lineIdx).range, replaced);
     return edit;
   }
 
