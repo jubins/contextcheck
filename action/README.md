@@ -28,7 +28,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0   # so the changed-files diff works
-      - uses: jubins/contextcheck/action@v1
+      - uses: jubins/contextcheck/action@v0
 ```
 
 That's it. On each PR the Action posts (and updates) one comment summarising the
@@ -60,7 +60,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
-      - uses: jubins/contextcheck/action@v1
+      - uses: jubins/contextcheck/action@v0
         with:
           sarif-file: contextcheck.sarif
       - uses: github/codeql-action/upload-sarif@v3
@@ -75,7 +75,7 @@ Start with the default (`severity-threshold: none`) so it never blocks merges
 while people get used to it. Once the team trusts it, raise the bar:
 
 ```yaml
-      - uses: jubins/contextcheck/action@v1
+      - uses: jubins/contextcheck/action@v0
         with:
           severity-threshold: error
 ```
