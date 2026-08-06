@@ -11,3 +11,6 @@ coverage/
 test/fixtures/config-repo/
 research/out/
 repos.txt
+
+# Gradle build artifacts generated when the gradle fixture is exercised
+test/fixtures/gradle-repo/.gradle/
