@@ -47,6 +47,22 @@ interface DiagnosticWithFinding extends vscode.Diagnostic {
   finding?: Finding;
 }
 
+/**
+ * Findings keyed by document, so the code-action provider can recover the
+ * Finding behind a diagnostic. VS Code may hand the provider reconstructed
+ * Diagnostic objects, which drop the custom `finding` property we attach —
+ * relying on it alone made the lightbulb appear only intermittently.
+ */
+const findingsByDoc = new Map<string, Finding[]>();
+
+/** Does this diagnostic correspond to this finding? */
+function matchesFinding(diag: vscode.Diagnostic, f: Finding): boolean {
+  return (
+    diag.code === f.rule &&
+    diag.range.start.line === Math.max(0, f.line - 1)
+  );
+}
+
 async function lintDocument(
   doc: vscode.TextDocument,
 ): Promise<{ diagnostics: vscode.Diagnostic[]; findings: Finding[] }> {
@@ -70,6 +86,7 @@ async function lintDocument(
     diag.finding = f;
     return diag;
   });
+  findingsByDoc.set(doc.uri.toString(), result.findings);
   return { diagnostics, findings: result.findings };
 }
 
@@ -79,20 +96,46 @@ class ContextCheckActions implements vscode.CodeActionProvider {
 
   provideCodeActions(
     doc: vscode.TextDocument,
-    _range: vscode.Range | vscode.Selection,
+    range: vscode.Range | vscode.Selection,
     context: vscode.CodeActionContext,
   ): vscode.CodeAction[] {
+    const stored = findingsByDoc.get(doc.uri.toString()) ?? [];
     const actions: vscode.CodeAction[] = [];
-    for (const diag of context.diagnostics as DiagnosticWithFinding[]) {
-      if (diag.source !== DIAGNOSTIC_SOURCE || !diag.finding) continue;
-      const title = fixTitle(diag.finding);
-      const edit = buildFix(doc, diag.finding);
-      if (!title || !edit) continue;
+    const seen = new Set<string>();
+
+    const add = (finding: Finding, diag?: vscode.Diagnostic): void => {
+      // One action per rule+line, however we arrived at the finding.
+      const key = `${finding.rule}:${finding.line}:${finding.column}`;
+      if (seen.has(key)) return;
+      const title = fixTitle(finding);
+      if (!title) return;
+      const edit = buildFix(doc, finding);
+      if (!edit) return;
+      seen.add(key);
       const fix = new vscode.CodeAction(title, vscode.CodeActionKind.QuickFix);
-      fix.diagnostics = [diag];
+      if (diag) fix.diagnostics = [diag];
       fix.edit = edit;
       actions.push(fix);
+    };
+
+    // Preferred path: the diagnostics VS Code says are at the cursor. Recover
+    // the Finding from the attached property, or by matching against the map.
+    for (const diag of context.diagnostics as DiagnosticWithFinding[]) {
+      if (diag.source !== DIAGNOSTIC_SOURCE) continue;
+      const finding =
+        diag.finding ?? stored.find((f) => matchesFinding(diag, f));
+      if (finding) add(finding, diag);
     }
+
+    // Fallback: offer fixes for any finding on a line the selection touches.
+    // context.diagnostics can be empty (e.g. the lightbulb is requested for a
+    // range that only partially overlaps the diagnostic), which previously
+    // meant no quick fix was offered at all.
+    for (const finding of stored) {
+      const line = Math.max(0, finding.line - 1);
+      if (line >= range.start.line && line <= range.end.line) add(finding);
+    }
+
     return actions;
   }
 }
@@ -211,13 +254,20 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.workspace.onDidOpenTextDocument((doc) => void refresh(doc)),
     vscode.workspace.onDidCloseTextDocument((doc) => {
       diagnostics.delete(doc.uri);
+      findingsByDoc.delete(doc.uri.toString());
       updateStatusBarAndBadge();
     }),
     vscode.window.onDidChangeActiveTextEditor(() =>
       updateStatusBarAndBadge(),
     ),
+    // Match on file name rather than language id: a context file opened with a
+    // non-markdown language (plaintext, or a user association) still needs
+    // quick fixes, and that mismatch is one reason the lightbulb went missing.
     vscode.languages.registerCodeActionsProvider(
-      { language: "markdown" },
+      CONTEXT_FILENAMES.map((name) => ({
+        scheme: "file",
+        pattern: `**/${name}`,
+      })),
       new ContextCheckActions(),
       { providedCodeActionKinds: ContextCheckActions.kinds },
     ),

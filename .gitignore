@@ -14,3 +14,6 @@ repos.txt
 
 # Gradle build artifacts generated when the gradle fixture is exercised
 test/fixtures/gradle-repo/.gradle/
+
+# Blog drafts live outside this repo
+blog/
