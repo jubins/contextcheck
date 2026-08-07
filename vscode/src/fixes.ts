@@ -22,8 +22,9 @@ export function replacePackageManager(
 ): string | undefined {
   // Match `npm` as a standalone word, not inside a longer identifier.
   const m = line.match(/(^|[^\w-])npm(?=$|[^\w-])/);
-  if (!m) return undefined;
-  const at = m.index! + m[1]!.length;
+  const prefix = m?.[1];
+  if (m?.index === undefined || prefix === undefined) return undefined;
+  const at = m.index + prefix.length;
   return `${line.slice(0, at)}${pm}${line.slice(at + 3)}`;
 }
 
@@ -37,14 +38,32 @@ export function replaceToolName(
   named: string,
   actual: string,
 ): string | undefined {
-  const re = new RegExp(`(^|[^\\w-])${escapeRegExp(named)}(?=$|[^\\w-])`, "gi");
-  if (!re.test(line)) return undefined;
-  re.lastIndex = 0;
-  return line.replace(re, (_full, pre: string) => `${pre}${actual}`);
-}
-
-function escapeRegExp(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  if (named.length === 0) return undefined;
+  // Scan for standalone occurrences rather than building a RegExp from the
+  // tool name: a word character or hyphen on either side means it is part of a
+  // longer identifier (e.g. `jest-worker`) and must be left alone.
+  const isWordChar = (ch: string | undefined): boolean =>
+    ch !== undefined && /[\w-]/.test(ch);
+  const haystack = line.toLowerCase();
+  const needle = named.toLowerCase();
+  let out = "";
+  let cursor = 0;
+  let found = false;
+  for (;;) {
+    const at = haystack.indexOf(needle, cursor);
+    if (at < 0) break;
+    const end = at + needle.length;
+    if (!isWordChar(line[at - 1]) && !isWordChar(line[end])) {
+      out += line.slice(cursor, at) + actual;
+      cursor = end;
+      found = true;
+    } else {
+      out += line.slice(cursor, end);
+      cursor = end;
+    }
+  }
+  if (!found) return undefined;
+  return out + line.slice(cursor);
 }
 
 /**
@@ -72,7 +91,12 @@ function firstBacktickToken(text: string): string | undefined {
 
 /** All backtick-wrapped tokens in a string, in order. */
 function backtickTokens(text: string): string[] {
-  return [...text.matchAll(/`([^`]+)`/g)].map((m) => m[1]!);
+  const out: string[] = [];
+  for (const m of text.matchAll(/`([^`]+)`/g)) {
+    const token = m[1];
+    if (token !== undefined) out.push(token);
+  }
+  return out;
 }
 
 /**
@@ -93,9 +117,9 @@ function packageManagerOf(finding: Finding): string | undefined {
 function toolPairOf(
   finding: Finding,
 ): { named: string; actual: string } | undefined {
-  const tokens = backtickTokens(finding.message);
-  if (tokens.length < 2) return undefined;
-  return { named: tokens[0]!, actual: tokens[1]! };
+  const [named, actual] = backtickTokens(finding.message);
+  if (named === undefined || actual === undefined) return undefined;
+  return { named, actual };
 }
 
 /** A human label for the fix a finding supports, or undefined if none. */

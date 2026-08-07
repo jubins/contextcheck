@@ -182,6 +182,31 @@ describe("replaceToolName", () => {
       replaceToolName("jest-environment stays", "jest", "vitest"),
     ).toBeUndefined();
   });
+
+  it("matches case-insensitively", () => {
+    expect(replaceToolName("We use Jest here.", "jest", "vitest")).toBe(
+      "We use vitest here.",
+    );
+  });
+
+  it("rewrites a standalone mention while leaving a compound one alone", () => {
+    expect(
+      replaceToolName("jest but not jest-worker", "jest", "vitest"),
+    ).toBe("vitest but not jest-worker");
+  });
+
+  it("handles a mention at the very start and end of the line", () => {
+    expect(replaceToolName("jest", "jest", "vitest")).toBe("vitest");
+    expect(replaceToolName("we run jest", "jest", "vitest")).toBe(
+      "we run vitest",
+    );
+  });
+
+  it("rewrites inside backticks", () => {
+    expect(replaceToolName("use `jest` today", "jest", "vitest")).toBe(
+      "use `vitest` today",
+    );
+  });
 });
 
 describe("tool-mismatch fix", () => {
